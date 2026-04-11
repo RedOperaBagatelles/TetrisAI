@@ -586,7 +586,7 @@ private:
 /// which are a kind of 2D cameras. With views you can globally
 /// scroll, rotate or zoom everything that is drawn,
 /// without having to transform every single entity. See the
-/// documentation of `sf::View` for more details and sample pieces of
+/// documentation of `sf::View` for more details and sample pieceRotateDatas of
 /// code about this class.
 ///
 /// On top of that, render targets are still able to render direct
