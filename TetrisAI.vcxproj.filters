@@ -1,0 +1,368 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="헤더 파일">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="External\SFML\include\SFML\Window.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Config.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\GpuPreference.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Main.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Network.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\OpenGL.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\AudioResource.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\Export.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\InputSoundFile.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\Listener.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\Music.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\OutputSoundFile.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\PlaybackDevice.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\Sound.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\SoundBuffer.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\SoundBufferRecorder.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\SoundChannel.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\SoundFileFactory.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\SoundFileReader.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\SoundFileWriter.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\SoundRecorder.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\SoundSource.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Audio\SoundStream.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\BlendMode.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\CircleShape.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Color.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\ConvexShape.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\CoordinateType.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Drawable.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Export.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Font.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Glsl.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Glyph.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Image.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\PrimitiveType.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Rect.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\RectangleShape.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\RenderStates.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\RenderTarget.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\RenderTexture.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\RenderWindow.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Shader.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Shape.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Sprite.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\StencilMode.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Text.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Texture.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Transform.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Transformable.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\Vertex.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\VertexArray.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\VertexBuffer.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Graphics\View.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Network\Export.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Network\Ftp.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Network\Http.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Network\IpAddress.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Network\Packet.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Network\Socket.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Network\SocketHandle.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Network\SocketSelector.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Network\TcpListener.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Network\TcpSocket.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Network\UdpSocket.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\Angle.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\Clock.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\Err.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\Exception.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\Export.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\FileInputStream.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\InputStream.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\MemoryInputStream.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\NativeActivity.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\Sleep.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\String.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\SuspendAwareClock.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\Time.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\Utf.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\Vector2.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\System\Vector3.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\Clipboard.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\Context.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\ContextSettings.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\Cursor.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\Event.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\Export.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\GlResource.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\Joystick.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\Keyboard.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\Mouse.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\Sensor.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\Touch.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\VideoMode.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\Vulkan.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\Window.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\WindowBase.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\WindowEnums.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="External\SFML\include\SFML\Window\WindowHandle.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="External\SFML\include\SFML\Audio\SoundFileFactory.inl">
+      <Filter>헤더 파일</Filter>
+    </None>
+    <None Include="External\SFML\include\SFML\Graphics\Color.inl">
+      <Filter>헤더 파일</Filter>
+    </None>
+    <None Include="External\SFML\include\SFML\Graphics\Glsl.inl">
+      <Filter>헤더 파일</Filter>
+    </None>
+    <None Include="External\SFML\include\SFML\Graphics\Rect.inl">
+      <Filter>헤더 파일</Filter>
+    </None>
+    <None Include="External\SFML\include\SFML\Graphics\Transform.inl">
+      <Filter>헤더 파일</Filter>
+    </None>
+    <None Include="External\SFML\include\SFML\System\Angle.inl">
+      <Filter>헤더 파일</Filter>
+    </None>
+    <None Include="External\SFML\include\SFML\System\String.inl">
+      <Filter>헤더 파일</Filter>
+    </None>
+    <None Include="External\SFML\include\SFML\System\Time.inl">
+      <Filter>헤더 파일</Filter>
+    </None>
+    <None Include="External\SFML\include\SFML\System\Utf.inl">
+      <Filter>헤더 파일</Filter>
+    </None>
+    <None Include="External\SFML\include\SFML\System\Vector2.inl">
+      <Filter>헤더 파일</Filter>
+    </None>
+    <None Include="External\SFML\include\SFML\System\Vector3.inl">
+      <Filter>헤더 파일</Filter>
+    </None>
+    <None Include="External\SFML\include\SFML\Window\Event.inl">
+      <Filter>헤더 파일</Filter>
+    </None>
+    <None Include="External\SFML\include\SFML\Window\WindowBase.inl">
+      <Filter>헤더 파일</Filter>
+    </None>
+  </ItemGroup>
+</Project>
