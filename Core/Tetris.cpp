@@ -11,6 +11,9 @@ void Tetris::Ready(int x, int y)
 
 	currentRenderPieces.clear();
 
+	const auto walls = Pieces::GetRenderWalls(x, y);
+	currentRenderPieces.insert(currentRenderPieces.end(), walls.begin(), walls.end());
+
 	// 테스트용 맵 데이터 설정
 	board[0][0] = 1;	// I
 	board[0][1] = 2;	// J
@@ -19,12 +22,13 @@ void Tetris::Ready(int x, int y)
 	board[0][4] = 5;	// S
 	board[0][5] = 6;	// T
 	board[0][6] = 7;	// Z
-
 }
 
 void Tetris::Update(Window& window)
 {
 	currentRenderPieces.clear();
+	const auto walls = Pieces::GetRenderWalls(startX, startY);
+	currentRenderPieces.insert(currentRenderPieces.end(), walls.begin(), walls.end());
 
 	// 맵에 있는 모든 조각들의 렌더링 객체 생성
 	for (int i = 0; i < height; i++)
@@ -36,7 +40,7 @@ void Tetris::Update(Window& window)
 				continue;
 
 			Pieces pieces;
-			currentRenderPieces.push_back(pieces.GetRenderOnePices(j, i, static_cast<PieceType>(board[i][j])));
+            currentRenderPieces.push_back(pieces.GetRenderOnePices(j, height - i - 2, static_cast<PieceType>(board[i][j]), startX, startY));
 		}
 	}
 

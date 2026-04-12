@@ -12,7 +12,7 @@ class Window
 public:
 	void Ready();
 	void Update();
-	void Render();
+	bool Render();
 
 	// RenderTarget에 그릴 sf::Drawable 객체를 추가하는 메소드
 	void AddRenderTarget(const std::shared_ptr<const sf::Drawable>& drawable);

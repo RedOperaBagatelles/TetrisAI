@@ -2,7 +2,7 @@
 
 void Window::Ready()
 {
-	tetris.Ready(0, 0);
+	tetris.Ready(50, 50);
 }
 
 void Window::Update()
@@ -10,23 +10,25 @@ void Window::Update()
 	tetris.Update(*this);
 }
 
-void Window::Render()
+bool Window::Render()
 {
-    if (window.isOpen())
+    if (!window.isOpen())
+        return false;
+
+    while (const std::optional event = window.pollEvent())
     {
-        while (const std::optional event = window.pollEvent())
-        {
-            if (event->is<sf::Event::Closed>())
-                window.close();
-        }
-
-        window.clear();
-
-        for (const auto& renderTarget : renderTargets)
-			window.draw(*renderTarget);
-
-        window.display();
+        if (event->is<sf::Event::Closed>())
+            window.close();
     }
+
+    window.clear();
+
+    for (const auto& renderTarget : renderTargets)
+        window.draw(*renderTarget);
+
+    window.display();
+
+    return true;
 }
 
 void Window::AddRenderTarget(const std::shared_ptr<const sf::Drawable>& drawable)

@@ -5,10 +5,12 @@ int main()
 	Window window;
 	window.Ready();
     
-    while (true)
+    bool isSucceed = true;
+
+    while (isSucceed)
     {
         window.Update();
-        window.Render();
+        isSucceed = window.Render();
     }
 
     return 0;
