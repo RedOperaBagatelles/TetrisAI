@@ -8,14 +8,16 @@
 class Tetris
 {
 public:
+	static constexpr int height = 20;
+	static constexpr int width = 10;
+	static constexpr int topMarginBlock = 2;	// 맵의 위쪽에 보이지 않는 블록 영역 (회전 시 충돌 체크용)
+
 	void Ready(int x, int y);
 	void Update(class Window& window);
 
-	static constexpr int height = 20;
-	static constexpr int width = 10;
+	const short (*GetBoard() const)[width] { return board; }
 
 private:
-	static constexpr int topMarginBlock = 2;	// 맵의 위쪽에 보이지 않는 블록 영역 (회전 시 충돌 체크용)
 
 	int startX = 0;
 	int startY = 0;

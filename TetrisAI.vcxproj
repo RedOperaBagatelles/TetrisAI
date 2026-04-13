@@ -133,12 +133,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Core\Pieces.cpp" />
+    <ClCompile Include="Core\Pieces\IPiece.cpp" />
+    <ClCompile Include="Core\Pieces\Piece.cpp" />
     <ClCompile Include="Core\Tetris.cpp" />
     <ClCompile Include="Core\Window.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Pieces.h" />
+    <ClInclude Include="Core\Pieces\IPiece.h" />
+    <ClInclude Include="Core\Pieces\Piece.h" />
     <ClInclude Include="Core\Window.h" />
     <ClInclude Include="Core\Tetris.h" />
     <ClInclude Include="External\SFML\include\SFML\Audio.hpp" />

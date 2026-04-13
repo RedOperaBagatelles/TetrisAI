@@ -27,6 +27,12 @@
     <ClCompile Include="Core\Pieces.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Pieces\IPiece.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Pieces\Piece.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\SFML\include\SFML\Window.hpp">
@@ -339,6 +345,12 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Core\Pieces.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Pieces\IPiece.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Pieces\Piece.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
