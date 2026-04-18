@@ -1,35 +1,79 @@
-#pragma once
+﻿#pragma once
 
-#include <array>
+#include "Core/Tetris.h"
+#include "Utility/Type.h"
 
-struct Position { int x, y; };
+enum class PieceType { None, I, J, L, O, S, T, Z };				// 테트리스 조각의 종류를 나타내는 열거형
+enum class PieceRotationType { Spawn, Right, Reverse, Left };	// 테트리스 조각의 회전 상태를 나타내는 열거형
 
 class Piece
 {
 public:
-	Piece(int x, int y);
+	Piece(map_size x, map_size y);
 
-	virtual void Rotate(class Tetris& tetris);
-	virtual void BackwardRotate(class Tetris& tetris);
+    bool Rotate(class Tetris& tetris, PieceType pieceType, low_uint rotateShape[4][4][4], bool isClockwise = true); // 조각을 회전시키는 순수 가상 함수
+
+    bool IsCollision(const Tetris& tetris, const map_size rotateShape[4][4], map_size x, map_size y) const;
 
 protected:
-	virtual bool CanRotate(const Tetris& tetris, int rotationCount) const;
-	bool CanPlace(const Tetris& tetris, int centerX, int centerY, const std::array<Position, 4>& blocks) const;
+	static int NormalizeRotation(low_uint value);
 
-	virtual const std::array<std::array<Position, 4>, 4>& GetRotationData() const = 0;
-	virtual const std::array<std::array<Position, 5>, 4>& GetClockwiseKickData() const;
-	virtual const std::array<std::array<Position, 5>, 4>& GetCounterClockwiseKickData() const;
+    static constexpr Position iKick[4][4][5] =
+    {
+        // from 0
+        {
+            {{0,0},{-2,0},{1,0},{-2,-1},{1,2}}, // 0->R
+            {}, {}, {}
+        },
 
-	static int NormalizeRotation(int value);
+        // from R
+        {
+            {}, {{0,0},{-1,0},{2,0},{-1,2},{2,-1}}, // R->2
+            {}, {}
+        },
 
-	static constexpr int rotationCount = 4;
+        // from 2
+        {
+            {}, {}, {{0,0},{2,0},{-1,0},{2,1},{-1,-2}}, // 2->L
+            {}
+        },
 
-	int centerX;
-	int centerY;
+        // from L
+        {
+            {{0,0},{1,0},{-2,0},{1,-2},{-2,1}}, // L->0
+            {}, {}, {}
+        }
+    };
 
-	int currentRotation = 0;
+    static constexpr Position normalKick[4][4][5] =
+    {
+        // from 0
+        {
+            {{0,0},{-1,0},{-1,1},{0,-2},{-1,-2}}, // 0->R
+            {}, {}, {}
+        },
 
-private:
-	static const std::array<std::array<Position, 5>, 4> defaultClockwiseKickData;
-	static const std::array<std::array<Position, 5>, 4> defaultCounterClockwiseKickData;
+        // from R
+        {
+            {}, {{0,0},{1,0},{1,-1},{0,2},{1,2}}, // R->2
+            {}, {}
+        },
+
+        // from 2
+        {
+            {}, {}, {{0,0},{1,0},{1,1},{0,-2},{1,-2}}, // 2->L
+            {}
+        },
+        // from L
+        {
+            {{0,0},{-1,0},{-1,-1},{0,2},{-1,2}}, // L->0
+            {}, {}, {}
+        }
+	};
+
+    static constexpr low_uint rotationCount = 4;
+
+	map_size currentX;
+    map_size currentY;
+	low_uint currentRotation = 0;
 };

@@ -1,104 +1,62 @@
-#include "Piece.h"
+﻿#include "Piece.h"
 
 #include "Core/Tetris.h"
 
-const std::array<std::array<Position, 5>, 4> Piece::defaultClockwiseKickData =
-{
-	std::array<Position, 5>{ Position{ 0,  0 }, Position{-1,  0 }, Position{-1,  1 }, Position{ 0, -2 }, Position{-1, -2 } }, // 0 -> 1
-	std::array<Position, 5>{ Position{ 0,  0 }, Position{ 1,  0 }, Position{ 1, -1 }, Position{ 0,  2 }, Position{ 1,  2 } }, // 1 -> 2
-	std::array<Position, 5>{ Position{ 0,  0 }, Position{ 1,  0 }, Position{ 1,  1 }, Position{ 0, -2 }, Position{ 1, -2 } }, // 2 -> 3
-	std::array<Position, 5>{ Position{ 0,  0 }, Position{-1,  0 }, Position{-1, -1 }, Position{ 0,  2 }, Position{-1,  2 } }  // 3 -> 0
-};
-
-const std::array<std::array<Position, 5>, 4> Piece::defaultCounterClockwiseKickData =
-{
-	std::array<Position, 5>{ Position{ 0,  0 }, Position{ 1,  0 }, Position{ 1,  1 }, Position{ 0, -2 }, Position{ 1, -2 } }, // 0 -> 3
-	std::array<Position, 5>{ Position{ 0,  0 }, Position{ 1,  0 }, Position{ 1, -1 }, Position{ 0,  2 }, Position{ 1,  2 } }, // 1 -> 0
-	std::array<Position, 5>{ Position{ 0,  0 }, Position{-1,  0 }, Position{-1,  1 }, Position{ 0, -2 }, Position{-1, -2 } }, // 2 -> 1
-	std::array<Position, 5>{ Position{ 0,  0 }, Position{-1,  0 }, Position{-1, -1 }, Position{ 0,  2 }, Position{-1,  2 } }  // 3 -> 2
-};
-
-Piece::Piece(int x, int y) : centerX(x), centerY(y)
+Piece::Piece(map_size x, map_size y) : currentX(x), currentY(y)
 {
 
 }
 
-void Piece::Rotate(Tetris& tetris)
+bool Piece::Rotate(Tetris& tetris, PieceType pieceType, low_uint rotateShape[4][4][4], bool isClockwise)
 {
-	const int targetRotation = NormalizeRotation(currentRotation + 1);
-	const auto& kickData = GetClockwiseKickData();
-	const auto& rotData = GetRotationData();
+	int movement = isClockwise ? 1 : -1;									// 회전 방향에 따라 이동량 결정
+	low_uint nextRotation = NormalizeRotation(currentRotation + movement);	// 다음 회전 상태 계산
 
-	for (const auto& kick : kickData[currentRotation])
+	// 호출한 클래스가 IPiece인 경우 iKick 데이터를 사용, 그렇지 않으면 normalKick 데이터를 사용
+	auto& kick = (pieceType == PieceType::I) ? iKick[currentRotation][nextRotation] : normalKick[currentRotation][nextRotation];
+
+	// 충돌이 발생하지 않는 위치를 찾을 때까지 5가지 킥 데이터를 시도
+	for (map_size i = 0; i < 5; i++)
 	{
-		if (!CanPlace(tetris, centerX + kick.x, centerY + kick.y, rotData[targetRotation]))
-			continue;
+		// 킥 데이터 적용 후 새로운 위치 계산
+		map_size nextX = currentX + kick[i].x, nextY = currentY + kick[i].y;
 
-		centerX += kick.x;
-		centerY += kick.y;
-		currentRotation = targetRotation;
+		if (!IsCollision(tetris, rotateShape[nextRotation], nextX, nextY))
+		{
+			currentX = nextX;
+			currentY = nextY;
+			currentRotation = nextRotation;
 
-		return;
+			return true;
+		}
 	}
+
+	return false;
 }
 
-void Piece::BackwardRotate(Tetris& tetris)
+bool Piece::IsCollision(const Tetris& tetris, const map_size rotateShape[4][4], map_size x, map_size y) const
 {
-	const int targetRotation = NormalizeRotation(currentRotation - 1);
-	const auto& kickData = GetCounterClockwiseKickData();
-	const auto& rotData = GetRotationData();
+	const map_size(*board)[tetris.width] = tetris.GetBoard();		// 게임 보드 가져오기
+	low_uint newRotation = NormalizeRotation(currentRotation + 1);	// 다음 회전 상태 계산
 
-	for (const auto& kick : kickData[currentRotation])
+	for (map_size y = 0; y < 4; y++)
 	{
-		if (!CanPlace(tetris, centerX + kick.x, centerY + kick.y, rotData[targetRotation]))
-			continue;
+		for (map_size x = 0; x < 4; x++)
+		{
+			map_size newX = currentX + x, newY = currentY + y;
 
-		centerX += kick.x;
-		centerY += kick.y;
-		currentRotation = targetRotation;
+			if (newX < 0 || newX >= tetris.width || newY < 0 || newY >= tetris.height + tetris.topMarginBlock)
+				return true;
 
-		return;
+			if (board[newY][newX])
+				return true;
+		}
 	}
+
+	return false;
 }
 
-bool Piece::CanRotate(const Tetris& tetris, int rotationCount) const
-{
-	return CanPlace(tetris, centerX, centerY, GetRotationData()[NormalizeRotation(rotationCount)]);
-}
-
-int Piece::NormalizeRotation(int value)
+int Piece::NormalizeRotation(low_uint value)
 {
 	return (value % rotationCount + rotationCount) % rotationCount;
-}
-
-bool Piece::CanPlace(const Tetris& tetris, int centerX, int centerY, const std::array<Position, 4>& blocks) const
-{
-	const auto board = tetris.GetBoard();
-
-	for (const auto& block : blocks)
-	{
-		const int x = centerX + block.x;
-		const int y = centerY + block.y;
-
-		if (x < 0 || x >= Tetris::width)
-			return false;
-
-		if (y < 0 || y >= Tetris::height + Tetris::topMarginBlock)
-			return false;
-
-		if (board[y][x] != 0)
-			return false;
-	}
-
-	return true;
-}
-
-const std::array<std::array<Position, 5>, 4>& Piece::GetClockwiseKickData() const
-{
-	return defaultClockwiseKickData;
-}
-
-const std::array<std::array<Position, 5>, 4>& Piece::GetCounterClockwiseKickData() const
-{
-	return defaultCounterClockwiseKickData;
 }

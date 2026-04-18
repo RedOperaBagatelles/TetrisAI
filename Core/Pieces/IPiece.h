@@ -2,20 +2,40 @@
 
 #include "Piece.h"
 
-#include <array>
+#include "Utility/Type.h"
+
 
 class IPiece : public Piece
 {
 public:
-	IPiece(int x, int y);
-
-protected:
-	const std::array<std::array<Position, 4>, 4>& GetRotationData() const override;
-	const std::array<std::array<Position, 5>, 4>& GetClockwiseKickData() const override;
-	const std::array<std::array<Position, 5>, 4>& GetCounterClockwiseKickData() const override;
+	IPiece();
 
 private:
-	static const std::array<std::array<Position, 4>, 4> rotationData;
-	static const std::array<std::array<Position, 5>, 4> iClockwiseKickData;
-	static const std::array<std::array<Position, 5>, 4> iCounterClockwiseKickData;
+    static constexpr low_uint rotateShape[4][4][4] =
+    {
+        {
+            {0,0,0,0},
+            {1,1,1,1},
+            {0,0,0,0},
+            {0,0,0,0}
+        },
+        {
+            {0,0,1,0},
+            {0,0,1,0},
+            {0,0,1,0},
+            {0,0,1,0}
+        },
+        {
+            {0,0,0,0},
+            {0,0,0,0},
+            {1,1,1,1},
+            {0,0,0,0}
+        },
+        {
+            {0,1,0,0},
+            {0,1,0,0},
+            {0,1,0,0},
+            {0,1,0,0}
+        }
+    };
 };

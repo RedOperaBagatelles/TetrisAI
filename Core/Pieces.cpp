@@ -1,7 +1,14 @@
 ﻿#include "Pieces.h"
 #include "Tetris.h"
 
+#include "Pieces/Piece.h"
+
+#include <SFML/Graphics/Color.hpp>
+#include <SFML/Graphics/Drawable.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
+
 #include <memory>
+#include <vector>
 
 std::vector<std::shared_ptr<const sf::Drawable>> Pieces::GetRenderWalls(int x, int y)
 {
@@ -58,7 +65,7 @@ std::shared_ptr<const sf::RectangleShape> Pieces::GetRenderOnePices(int x, int y
 
 	sf::Color color = colors[static_cast<int>(type)];
 	shape->setFillColor(color);
-   shape->setPosition({ static_cast<float>(offsetX + x * blockSize), static_cast<float>(offsetY + y * blockSize) });
+	shape->setPosition({ static_cast<float>(offsetX + x * blockSize), static_cast<float>(offsetY + y * blockSize) });
 
 	return shape;
 }

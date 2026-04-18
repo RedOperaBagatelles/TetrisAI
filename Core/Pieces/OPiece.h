@@ -2,20 +2,39 @@
 
 #include "Piece.h"
 
-#include <array>
+#include "Utility/Type.h"
 
 class OPiece : public Piece
 {
 public:
-	OPiece(int x, int y);
-
-	void Rotate(class Tetris& tetris) override;
-	void BackwardRotate(class Tetris& tetris) override;
-
-protected:
-	const std::array<std::array<Position, 4>, 4>& GetRotationData() const override;
+	OPiece();
 
 private:
-	static const std::array<std::array<Position, 4>, 4> rotationData;
+    static constexpr low_uint rotateShape[4][4][4] =
+    {
+        {
+            {0,1,1,0},
+            {0,1,1,0},
+            {0,0,0,0},
+            {0,0,0,0}
+        },
+        {
+            {0,1,1,0},
+            {0,1,1,0},
+            {0,0,0,0},
+            {0,0,0,0}
+        },
+        {
+            {0,1,1,0},
+            {0,1,1,0},
+            {0,0,0,0},
+            {0,0,0,0}
+        },
+        {
+            {0,1,1,0},
+            {0,1,1,0},
+            {0,0,0,0},
+            {0,0,0,0}
+        }
+    };
 };
-

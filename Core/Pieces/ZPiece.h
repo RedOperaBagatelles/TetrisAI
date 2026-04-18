@@ -2,17 +2,40 @@
 
 #include "Piece.h"
 
-#include <array>
+#include "Utility/Type.h"
 
 class ZPiece : public Piece
 {
 public:
-	ZPiece(int x, int y);
-
-protected:
-	const std::array<std::array<Position, 4>, 4>& GetRotationData() const override;
+	ZPiece();
 
 private:
-	static const std::array<std::array<Position, 4>, 4> rotationData;
+	static constexpr low_uint rotateShape[4][4][4] =
+	{
+        {
+            {0,0,0,0},
+            {1,1,0,0},
+            {0,1,1,0},
+            {0,0,0,0}
+        },
+        {
+            {0,0,1,0},
+            {0,1,1,0},
+            {0,1,0,0},
+            {0,0,0,0}
+        },
+        {
+            {0,0,0,0},
+            {1,1,0,0},
+            {0,1,1,0},
+            {0,0,0,0}
+        },
+        {
+            {0,0,1,0},
+            {0,1,1,0},
+            {0,1,0,0},
+            {0,0,0,0}
+        }
+	};
 };
 
