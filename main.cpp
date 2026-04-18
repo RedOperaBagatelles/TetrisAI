@@ -4,7 +4,7 @@ int main()
 {
 	Window window;
 	window.Ready();
-    
+
     bool isSucceed = true;
 
     while (isSucceed)

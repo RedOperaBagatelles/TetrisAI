@@ -57,6 +57,18 @@
     <ClCompile Include="Utility\GameTimer.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Utility\Coroutine\WaitTime\WaitForSeconds.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Coroutine\WaitTime\WaitTime.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Coroutine\CoroutineManager.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Coroutine\IEnumerator.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\SFML\include\SFML\Window.hpp">
@@ -396,6 +408,18 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Utility\GameTimer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Coroutine\WaitTime\WaitForSeconds.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Coroutine\WaitTime\WaitTime.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Coroutine\CoroutineManager.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Coroutine\IEnumerator.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

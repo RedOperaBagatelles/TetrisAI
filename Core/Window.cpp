@@ -1,4 +1,5 @@
-#include "Window.h"
+﻿#include "Window.h"
+#include <Utility/GameTimer.h>
 
 void Window::Ready()
 {
@@ -27,6 +28,11 @@ bool Window::Render()
         window.draw(*renderTarget);
 
     window.display();
+
+    // FPS 측정 및 창 제목 갱신
+    gameTimer.Tick();
+    float fps = 1.0f / gameTimer.DeltaTime();
+    window.setTitle("Tetris - FPS: " + std::to_string(static_cast<int>(fps)));
 
     return true;
 }
