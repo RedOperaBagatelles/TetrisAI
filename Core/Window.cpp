@@ -29,6 +29,9 @@ bool Window::Render()
 
     window.display();
 
+	// 이번 프레임에 그릴 객체들을 저장하는 벡터 초기화
+    renderTargets.clear();
+
     // FPS 측정 및 창 제목 갱신
     gameTimer.Tick();
     float fps = 1.0f / gameTimer.DeltaTime();

@@ -6,6 +6,8 @@
 #include <vector>
 #include <memory>
 
+class Window;
+
 class Tetris
 {
 public:

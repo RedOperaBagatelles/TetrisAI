@@ -1,7 +1,11 @@
 ﻿#pragma once
 
 #include "Pieces/Piece.h"
+#include "SFML/Graphics/Color.hpp"
+#include "SFML/Graphics/RectangleShape.hpp"
+#include "SFML/Graphics/Drawable.hpp"
 
+#include <array>
 #include <vector>
 #include <memory>
 
