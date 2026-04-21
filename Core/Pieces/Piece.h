@@ -1,7 +1,8 @@
 ﻿#pragma once
 
-#include "Core/Tetris.h"
 #include "Utility/Type.h"
+
+class Tetris;
 
 enum class PieceType { None, I, J, L, O, S, T, Z };				// 테트리스 조각의 종류를 나타내는 열거형
 enum class PieceRotationType { Spawn, Right, Reverse, Left };	// 테트리스 조각의 회전 상태를 나타내는 열거형
@@ -10,10 +11,11 @@ class Piece
 {
 public:
 	Piece(map_size x, map_size y);
+	virtual ~Piece() = default;
 
     bool Rotate(class Tetris& tetris, PieceType pieceType, low_uint rotateShape[4][4][4], bool isClockwise = true); // 조각을 회전시키는 순수 가상 함수
 
-    bool IsCollision(const Tetris& tetris, const map_size rotateShape[4][4], map_size x, map_size y) const;
+    bool IsCollision(Tetris& tetris, const map_size rotateShape[4][4], map_size x, map_size y) const;
 
 protected:
 	static int NormalizeRotation(low_uint value);

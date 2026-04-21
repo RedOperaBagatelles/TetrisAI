@@ -7,11 +7,12 @@
 class SPiece : public Piece
 {
 public:
-	SPiece();
+	SPiece(class Tetris& tetris);
+    ~SPiece() override = default;
 
 private:
-	static constexpr low_uint rotateShape[4][4][4] =
-	{
+    static constexpr low_uint rotateShape[4][4][4] =
+    {
         {
             {0,0,0,0},
             {0,1,1,0},
@@ -36,6 +37,5 @@ private:
             {0,0,1,0},
             {0,0,0,0}
         }
-	};
+    };
 };
-

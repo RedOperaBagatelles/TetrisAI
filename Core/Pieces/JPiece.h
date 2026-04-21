@@ -2,12 +2,13 @@
 
 #include "Piece.h"
 
-#include <map>
+#include "Utility/Type.h"
 
 class JPiece : public Piece
 {
 public:
-	JPiece();
+	JPiece(class Tetris& tetris);
+	~JPiece() override = default;
 
 private:
 	static constexpr low_uint rotateShape[4][4][4] =

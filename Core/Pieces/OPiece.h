@@ -7,7 +7,8 @@
 class OPiece : public Piece
 {
 public:
-	OPiece();
+    OPiece(Tetris& tetris);
+    ~OPiece() override = default;
 
 private:
     static constexpr low_uint rotateShape[4][4][4] =

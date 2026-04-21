@@ -34,9 +34,9 @@ bool Piece::Rotate(Tetris& tetris, PieceType pieceType, low_uint rotateShape[4][
 	return false;
 }
 
-bool Piece::IsCollision(const Tetris& tetris, const map_size rotateShape[4][4], map_size x, map_size y) const
+bool Piece::IsCollision(Tetris& tetris, const map_size rotateShape[4][4], map_size x, map_size y) const
 {
-	const map_size(*board)[tetris.width] = tetris.GetBoard();		// 게임 보드 가져오기
+	auto board = tetris.GetBoard();		// 게임 보드 가져오기
 	low_uint newRotation = NormalizeRotation(currentRotation + 1);	// 다음 회전 상태 계산
 
 	for (map_size y = 0; y < 4; y++)

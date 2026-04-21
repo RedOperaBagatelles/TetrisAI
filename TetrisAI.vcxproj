@@ -134,6 +134,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Core\Pieces.cpp" />
+    <ClCompile Include="Core\PiecesQueue.cpp" />
     <ClCompile Include="Core\Pieces\IPiece.cpp" />
     <ClCompile Include="Core\Pieces\JPiece.cpp" />
     <ClCompile Include="Core\Pieces\LPiece.cpp" />
@@ -154,6 +155,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Pieces.h" />
+    <ClInclude Include="Core\PiecesQueue.h" />
     <ClInclude Include="Core\Pieces\IPiece.h" />
     <ClInclude Include="Core\Pieces\JPiece.h" />
     <ClInclude Include="Core\Pieces\LPiece.h" />

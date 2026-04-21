@@ -3,12 +3,14 @@
 #include "Piece.h"
 
 #include "Utility/Type.h"
+#include "Utility/GameTimer.h"
 
 
 class IPiece : public Piece
 {
 public:
-	IPiece();
+    IPiece(class Tetris& tetris);
+	~IPiece() override = default;
 
 private:
     static constexpr low_uint rotateShape[4][4][4] =

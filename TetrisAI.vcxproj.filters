@@ -69,6 +69,9 @@
     <ClCompile Include="Utility\Coroutine\IEnumerator.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Core\PiecesQueue.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\SFML\include\SFML\Window.hpp">
@@ -420,6 +423,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Utility\Coroutine\IEnumerator.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PiecesQueue.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

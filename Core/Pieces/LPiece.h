@@ -7,7 +7,7 @@
 class LPiece : public Piece
 {
 public:
-	LPiece();
+	LPiece(class Tetris& tetris);
 
 private:
 	static constexpr low_uint rotateShape[4][4][4] =

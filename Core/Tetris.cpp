@@ -2,7 +2,15 @@
 #include "Pieces.h"
 #include "Window.h"
 
-#include "SFML/Graphics.hpp"
+#include "Pieces/IPiece.h"
+#include "Pieces/JPiece.h"
+#include "Pieces/OPiece.h"
+#include "Pieces/LPiece.h"
+#include "Pieces/SPiece.h"
+#include "Pieces/TPiece.h"
+#include "Pieces/ZPiece.h"
+
+#include <memory>
 
 void Tetris::Ready(int x, int y)
 {
@@ -22,6 +30,8 @@ void Tetris::Ready(int x, int y)
 	board[0][4] = 5;	// S
 	board[0][5] = 6;	// T
 	board[0][6] = 7;	// Z
+
+	CreatePiece();
 }
 
 void Tetris::Update(Window& window)
@@ -31,7 +41,7 @@ void Tetris::Update(Window& window)
 	currentRenderPieces.insert(currentRenderPieces.end(), walls.begin(), walls.end());
 
 	// 맵에 있는 모든 조각들의 렌더링 객체 생성
-	for (int i = 0; i < height; i++)
+	for (int i = 0; i < maxHeight; i++)
 	{
 		for (int j = 0; j < width; j++)
 		{
@@ -45,4 +55,21 @@ void Tetris::Update(Window& window)
 	}
 
 	window.AddRenderTargets(currentRenderPieces);
+}
+
+void Tetris::CreatePiece()
+{
+	PieceType currentPieceType = piecesQueue.GetPiece();	// 현재 조각의 종류 가져오기
+
+	switch (currentPieceType)
+	{
+		case PieceType::I: currentPiece = std::make_unique<IPiece>(*this); break;
+		case PieceType::J: currentPiece = std::make_unique<JPiece>(*this); break;
+		case PieceType::L: currentPiece = std::make_unique<LPiece>(*this); break;
+		case PieceType::O: currentPiece = std::make_unique<OPiece>(*this); break;
+		case PieceType::S: currentPiece = std::make_unique<SPiece>(*this); break;
+		case PieceType::T: currentPiece = std::make_unique<TPiece>(*this); break;
+		case PieceType::Z: currentPiece = std::make_unique<ZPiece>(*this); break;
+		default: break;
+	}
 }

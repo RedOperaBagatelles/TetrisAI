@@ -9,7 +9,6 @@
 #include <vector>
 #include <memory>
 
-
 class Pieces
 {
 public:

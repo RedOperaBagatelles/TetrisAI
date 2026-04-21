@@ -7,11 +7,12 @@
 class ZPiece : public Piece
 {
 public:
-	ZPiece();
+    ZPiece(class Tetris& tetris);
+    ~ZPiece() override = default;
 
 private:
-	static constexpr low_uint rotateShape[4][4][4] =
-	{
+    static constexpr low_uint rotateShape[4][4][4] =
+    {
         {
             {0,0,0,0},
             {1,1,0,0},
@@ -36,6 +37,5 @@ private:
             {0,1,0,0},
             {0,0,0,0}
         }
-	};
+    };
 };
-
