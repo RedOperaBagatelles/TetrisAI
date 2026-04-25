@@ -2,12 +2,25 @@
 
 #include "Core/Tetris.h"
 
-Piece::Piece(map_size x, map_size y) : currentX(x), currentY(y)
+Piece::Piece(map_size x, map_size y, Tetris& tetris) : currentX(x), currentY(y), tetris(tetris)
 {
 
 }
 
-bool Piece::Rotate(Tetris& tetris, PieceType pieceType, low_uint rotateShape[4][4][4], bool isClockwise)
+void Piece::Update(float deltaTime)
+{
+	dropRemainTime -= deltaTime;
+
+	if (dropRemainTime <= 0.0f)
+	{
+		dropRemainTime = dropInterval;	// 다음 자동 낙하까지 남은 시간 초기화
+
+		// 조각을 한 칸 아래로 이동
+		Move(MoveDirection::Down);	
+	}
+}
+
+bool Piece::Rotate(PieceType pieceType, low_uint rotateShape[4][4][4], bool isClockwise)
 {
 	int movement = isClockwise ? 1 : -1;									// 회전 방향에 따라 이동량 결정
 	low_uint nextRotation = NormalizeRotation(currentRotation + movement);	// 다음 회전 상태 계산
@@ -21,7 +34,7 @@ bool Piece::Rotate(Tetris& tetris, PieceType pieceType, low_uint rotateShape[4][
 		// 킥 데이터 적용 후 새로운 위치 계산
 		map_size nextX = currentX + kick[i].x, nextY = currentY + kick[i].y;
 
-		if (!IsCollision(tetris, rotateShape[nextRotation], nextX, nextY))
+		if (!IsCollision(rotateShape[nextRotation], nextX, nextY))
 		{
 			currentX = nextX;
 			currentY = nextY;
@@ -34,7 +47,7 @@ bool Piece::Rotate(Tetris& tetris, PieceType pieceType, low_uint rotateShape[4][
 	return false;
 }
 
-bool Piece::IsCollision(Tetris& tetris, const map_size rotateShape[4][4], map_size x, map_size y) const
+bool Piece::IsCollision(const map_size rotateShape[4][4], map_size x, map_size y) const
 {
 	auto board = tetris.GetBoard();		// 게임 보드 가져오기
 	low_uint newRotation = NormalizeRotation(currentRotation + 1);	// 다음 회전 상태 계산
@@ -59,4 +72,29 @@ bool Piece::IsCollision(Tetris& tetris, const map_size rotateShape[4][4], map_si
 int Piece::NormalizeRotation(low_uint value)
 {
 	return (value % rotationCount + rotationCount) % rotationCount;
+}
+
+void Piece::Move(MoveDirection moveDirection)
+{
+	auto board = tetris.GetBoard();				// 게임 보드 가져오기
+	Position before = { currentX, currentY };	// 이동하기 전의 위치 저장
+
+	switch (moveDirection)
+	{
+		case MoveDirection::Left:
+			currentX--;
+			break;
+
+		case MoveDirection::Right:
+			currentX++;
+			break;
+
+		case MoveDirection::Down:
+			currentY++;
+			break;
+	}
+
+	Move(before);	// 이동 후 자식 클래스의 Move() 호출
+
+	Draw();	// 이동 후 자식 클래스의 Draw() 호출
 }

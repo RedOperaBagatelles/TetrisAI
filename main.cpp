@@ -3,7 +3,7 @@
 int main()
 {
 	Window window;
-	window.Ready();
+	window.Initialize();
 
     bool isSucceed = true;
 

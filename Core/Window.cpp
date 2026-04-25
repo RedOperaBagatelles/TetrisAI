@@ -1,14 +1,14 @@
 ﻿#include "Window.h"
 #include <Utility/GameTimer.h>
 
-void Window::Ready()
+void Window::Initialize()
 {
-	tetris.Ready(50, 50);
+    tetris.Initialize();
 }
 
-void Window::Update()
+void Window::Update(float deltaTime)
 {
-	tetris.Update(*this);
+	tetris.Update(gameTimer.DeltaTime());
 }
 
 bool Window::Render()

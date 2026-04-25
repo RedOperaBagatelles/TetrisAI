@@ -9,7 +9,12 @@ class LPiece : public Piece
 public:
 	LPiece(class Tetris& tetris);
 
+	void Update(float deltaTime) override;
+
 private:
+    void Move(Position beforePosition) override;
+    void Draw() override;
+
 	static constexpr low_uint rotateShape[4][4][4] =
 	{
         {

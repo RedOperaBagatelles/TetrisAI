@@ -12,6 +12,42 @@
 
 #include <memory>
 
+Tetris::Tetris(Window& window) : window(window)
+{
+
+}
+
+void Tetris::Initialize()
+{
+	Ready(50, 50);
+}
+
+void Tetris::Update(float deltaTime)
+{
+	if (currentPiece != nullptr)
+		currentPiece->Update(deltaTime);
+
+	currentRenderPieces.clear();
+	const auto walls = Pieces::GetRenderWalls(startX, startY);
+	currentRenderPieces.insert(currentRenderPieces.end(), walls.begin(), walls.end());
+
+	// 맵에 있는 모든 조각들의 렌더링 객체 생성
+	for (int i = 0; i < maxHeight; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			// 해당 위치에 조각이 없으면 건너뜀
+			if (board[i][j] == 0)
+				continue;
+
+			Pieces pieces;
+			currentRenderPieces.push_back(pieces.GetRenderOnePices(j, height - i - 2, static_cast<PieceType>(board[i][j]), startX, startY));
+		}
+	}
+
+	window.AddRenderTargets(currentRenderPieces);
+}
+
 void Tetris::Ready(int x, int y)
 {
 	startX = x;
@@ -34,42 +70,19 @@ void Tetris::Ready(int x, int y)
 	CreatePiece();
 }
 
-void Tetris::Update(Window& window)
-{
-	currentRenderPieces.clear();
-	const auto walls = Pieces::GetRenderWalls(startX, startY);
-	currentRenderPieces.insert(currentRenderPieces.end(), walls.begin(), walls.end());
-
-	// 맵에 있는 모든 조각들의 렌더링 객체 생성
-	for (int i = 0; i < maxHeight; i++)
-	{
-		for (int j = 0; j < width; j++)
-		{
-			// 해당 위치에 조각이 없으면 건너뜀
-			if (board[i][j] == 0)
-				continue;
-
-			Pieces pieces;
-            currentRenderPieces.push_back(pieces.GetRenderOnePices(j, height - i - 2, static_cast<PieceType>(board[i][j]), startX, startY));
-		}
-	}
-
-	window.AddRenderTargets(currentRenderPieces);
-}
-
 void Tetris::CreatePiece()
 {
 	PieceType currentPieceType = piecesQueue.GetPiece();	// 현재 조각의 종류 가져오기
 
 	switch (currentPieceType)
 	{
-		case PieceType::I: currentPiece = std::make_unique<IPiece>(*this); break;
-		case PieceType::J: currentPiece = std::make_unique<JPiece>(*this); break;
-		case PieceType::L: currentPiece = std::make_unique<LPiece>(*this); break;
-		case PieceType::O: currentPiece = std::make_unique<OPiece>(*this); break;
-		case PieceType::S: currentPiece = std::make_unique<SPiece>(*this); break;
-		case PieceType::T: currentPiece = std::make_unique<TPiece>(*this); break;
-		case PieceType::Z: currentPiece = std::make_unique<ZPiece>(*this); break;
+		case PieceType::I: currentPiece = std::make_shared<IPiece>(*this); break;
+		case PieceType::J: currentPiece = std::make_shared<JPiece>(*this); break;
+		case PieceType::L: currentPiece = std::make_shared<LPiece>(*this); break;
+		case PieceType::O: currentPiece = std::make_shared<OPiece>(*this); break;
+		case PieceType::S: currentPiece = std::make_shared<SPiece>(*this); break;
+		case PieceType::T: currentPiece = std::make_shared<TPiece>(*this); break;
+		case PieceType::Z: currentPiece = std::make_shared<ZPiece>(*this); break;
 		default: break;
 	}
 }

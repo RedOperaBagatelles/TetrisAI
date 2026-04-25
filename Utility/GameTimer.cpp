@@ -3,7 +3,7 @@
 #include <windows.h>
 
 // GameTimer 초기화
-GameTimer::GameTimer() : secondsPerFrame(0.0), deltaTime(-1.0), totalTime(0), pauseTime(0),
+GameTimer::GameTimer() : secondsPerFrame(0.0), deltaTime(0.0), totalTime(0), pauseTime(0),
 prevTime(0), currentTime(0), isStopped(false), stopTime(0), beforeTimePoint(0)
 {
 	// 초당 프레임을 설정함

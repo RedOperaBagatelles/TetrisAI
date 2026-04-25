@@ -10,7 +10,12 @@ public:
 	JPiece(class Tetris& tetris);
 	~JPiece() override = default;
 
+	void Update(float deltaTime) override;
+
 private:
+    void Move(Position beforePosition) override;
+    void Draw() override;
+
 	static constexpr low_uint rotateShape[4][4][4] =
 	{
         {

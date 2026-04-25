@@ -154,6 +154,7 @@
     <ClCompile Include="Utility\Type.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Core\GameLoop.h" />
     <ClInclude Include="Core\Pieces.h" />
     <ClInclude Include="Core\PiecesQueue.h" />
     <ClInclude Include="Core\Pieces\IPiece.h" />

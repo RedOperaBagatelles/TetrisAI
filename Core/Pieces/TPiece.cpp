@@ -4,13 +4,22 @@
 #include "Core/Tetris.h"
 #include "Utility/Type.h"
 
-TPiece::TPiece(Tetris& tetris) : Piece(3, 0)
+TPiece::TPiece(Tetris& tetris) : Piece(3, 0, tetris)
 {
-	auto map = tetris.GetBoard();
+	Draw();
+}
 
-	for (int i = 0; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-			map[Tetris::maxHeight - 1 - i][currentX + j] = rotateShape[currentRotation][i][j] * (low_uint)PieceType::T; // T 조각의 블록을 게임 보드에 배치
-	}
+void TPiece::Update(float deltaTime)
+{
+	Piece::Update(deltaTime);
+}
+
+void TPiece::Move(Position beforePosition)
+{
+	PIECE_MOVE(beforePosition);
+}
+
+void TPiece::Draw()
+{
+	PIECE_DRAW(PieceType::T);
 }

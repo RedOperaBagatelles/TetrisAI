@@ -4,13 +4,21 @@
 #include "Core/Tetris.h"
 #include "Utility/Type.h"
 
-LPiece::LPiece(Tetris& tetris) : Piece(3, 0)
+LPiece::LPiece(Tetris& tetris) : Piece(3, 0, tetris)
 {
-	auto map = tetris.GetBoard();
+	Draw();
+}
 
-	for (int i = 0; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-			map[Tetris::maxHeight - 1 - i][currentX + j] = rotateShape[currentRotation][i][j] * (low_uint)PieceType::L;
-	}
+void LPiece::Update(float deltaTime)
+{
+	Piece::Update(deltaTime);
+}
+void LPiece::Move(Position beforePosition)
+{
+	PIECE_MOVE(beforePosition);
+}
+
+void LPiece::Draw()
+{
+	PIECE_DRAW(PieceType::L);
 }
