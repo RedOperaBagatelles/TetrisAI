@@ -14,12 +14,12 @@ void ZPiece::Update(float deltaTime)
 	Piece::Update(deltaTime);
 }
 
-void ZPiece::Move(Position beforePosition)
+const low_uint(&ZPiece::GetRotateShape() const)[4][4][4]
 {
-	PIECE_MOVE(beforePosition);
+	return rotateShape;
 }
 
-void ZPiece::Draw()
+const PieceType ZPiece::GetPieceType() const
 {
-	PIECE_DRAW(PieceType::Z);
+	return PieceType::Z;
 }

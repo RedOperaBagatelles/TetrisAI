@@ -74,6 +74,62 @@ int Piece::NormalizeRotation(low_uint value)
 	return (value % rotationCount + rotationCount) % rotationCount;
 }
 
+void Piece::Draw()
+{
+	auto& rotateShape = GetRotateShape();
+	auto map = tetris.GetBoard();
+	PieceType pieceType = GetPieceType();
+
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+			map[Tetris::maxHeight - (currentY + i + 1)][currentX + j] = rotateShape[currentRotation][i][j] * (low_uint)pieceType;	// 조각의 블록을 게임 보드에 배치
+	}
+
+	// 이전에 있는 조각의 블록을 게임 보드에서 제거
+	while (!removeBlockTarget.empty())
+	{
+		auto& position = removeBlockTarget.back();
+		map[Tetris::maxHeight - (position.y + 1)][position.x] = 0;
+		removeBlockTarget.pop_back();
+	}
+}
+
+void Piece::Move(Position beforePosition)
+{
+	auto& rotateShape = GetRotateShape();
+
+	const int deltaX = static_cast<int>(currentX) - static_cast<int>(beforePosition.x);
+	const int deltaY = static_cast<int>(currentY) - static_cast<int>(beforePosition.y);
+
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			if (rotateShape[currentRotation][i][j] == 0)
+				continue;
+
+			const int beforeX = static_cast<int>(beforePosition.x) + j;
+			const int beforeY = static_cast<int>(beforePosition.y) + i;
+
+			if (beforeX < 0 || beforeX >= Tetris::width || beforeY < 0 || beforeY >= Tetris::maxHeight)
+				continue;
+
+			const int overlapLocalX = j - deltaX;
+			const int overlapLocalY = i - deltaY;
+
+			const bool isOverlappedByCurrent =
+				overlapLocalX >= 0 && overlapLocalX < 4 &&
+				overlapLocalY >= 0 && overlapLocalY < 4 &&
+				rotateShape[currentRotation][overlapLocalY][overlapLocalX] != 0;
+
+			// 조각이 이동하거나 회전할 때 제거해야 하는 블록들의 위치를 저장
+			if (!isOverlappedByCurrent)
+				removeBlockTarget.emplace_back(beforeX, beforeY);
+		}
+	}
+}
+
 void Piece::Move(MoveDirection moveDirection)
 {
 	auto board = tetris.GetBoard();				// 게임 보드 가져오기

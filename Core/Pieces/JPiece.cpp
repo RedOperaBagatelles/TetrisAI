@@ -14,12 +14,12 @@ void JPiece::Update(float deltaTime)
 	Piece::Update(deltaTime);
 }
 
-void JPiece::Move(Position beforePosition)
+const low_uint(&JPiece::GetRotateShape() const)[4][4][4]
 {
-	PIECE_MOVE(beforePosition);
+	return rotateShape;
 }
 
-void JPiece::Draw()
+const PieceType JPiece::GetPieceType() const
 {
-	PIECE_DRAW(PieceType::J);
+	return PieceType::J;
 }

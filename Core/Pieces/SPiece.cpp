@@ -14,12 +14,12 @@ void SPiece::Update(float deltaTime)
 	Piece::Update(deltaTime);
 }
 
-void SPiece::Move(Position beforePosition)
+const low_uint(&SPiece::GetRotateShape() const)[4][4][4]
 {
-	PIECE_MOVE(beforePosition);
+	return rotateShape;
 }
 
-void SPiece::Draw()
+const PieceType SPiece::GetPieceType() const
 {
-	PIECE_DRAW(PieceType::S);
+	return PieceType::S;
 }

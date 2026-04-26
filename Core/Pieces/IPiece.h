@@ -14,10 +14,11 @@ public:
 
 	void Update(float deltaTime) override;
 
-private:
-	void Move(Position beforePosition) override;
-	void Draw() override;
+protected:
+    const low_uint(&GetRotateShape() const)[4][4][4] override;
+    const PieceType GetPieceType() const override;
 
+private:
     static constexpr low_uint rotateShape[4][4][4] =
     {
         {
