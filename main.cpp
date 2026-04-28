@@ -1,4 +1,6 @@
-#include "Core/Window.h"
+﻿#include "Core/Window.h"
+
+#include "Utility/GameTimer.h"
 
 int main()
 {
@@ -7,9 +9,17 @@ int main()
 
     bool isSucceed = true;
 
+    // 게임 타이머 객체
+    GameTimer gameTimer;
+
     while (isSucceed)
     {
-        window.Update();
+        gameTimer.Tick();
+		const float deltaTime = gameTimer.DeltaTime();
+
+		window.KeyBoardInput(deltaTime);
+
+        window.Update(deltaTime);
         isSucceed = window.Render();
     }
 

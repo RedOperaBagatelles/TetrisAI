@@ -1,14 +1,58 @@
 ﻿#include "Window.h"
 #include <Utility/GameTimer.h>
 
+Window* Window::instance = nullptr;
+
 void Window::Initialize()
 {
+    hWnd = static_cast<HWND>(window.getNativeHandle());
+
+    // SFML 창의 Win32 WndProc를 서브클래싱해 키보드 메시지를 직접 수신
+    instance = this;
+    originalWndProc = reinterpret_cast<WNDPROC>(GetWindowLongPtr(hWnd, GWLP_WNDPROC));
+    SetWindowLongPtr(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&Window::WndProc));
+
     tetris.Initialize();
 }
 
 void Window::Update(float deltaTime)
 {
-	tetris.Update(gameTimer.DeltaTime());
+    // FPS 측정 및 창 제목 갱신
+    float fps = 1.0f / deltaTime;
+    window.setTitle("Tetris - FPS: " + std::to_string(static_cast<int>(fps)));
+
+    KeyBoardInput(deltaTime);
+	tetris.Update(deltaTime);
+}
+
+LRESULT CALLBACK Window::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    if (!instance)
+        return DefWindowProc(hWnd, msg, wParam, lParam);
+
+    switch (msg)
+    {
+    case WM_KILLFOCUS:
+        instance->keyboard.ClearState();
+        break;
+
+    case WM_KEYDOWN:
+    case WM_SYSKEYDOWN:
+        if (!(lParam & 0x40000000) || instance->keyboard.AutorepeatIsEnabled())
+            instance->keyboard.OnKeyPressed(static_cast<unsigned char>(wParam));
+        break;
+
+    case WM_KEYUP:
+    case WM_SYSKEYUP:
+        instance->keyboard.OnKeyReleased(static_cast<unsigned char>(wParam));
+        break;
+
+    case WM_CHAR:
+        instance->keyboard.OnChar(static_cast<unsigned char>(wParam));
+        break;
+    }
+
+    return CallWindowProc(instance->originalWndProc, hWnd, msg, wParam, lParam);
 }
 
 bool Window::Render()
@@ -32,11 +76,6 @@ bool Window::Render()
 	// 이번 프레임에 그릴 객체들을 저장하는 벡터 초기화
     renderTargets.clear();
 
-    // FPS 측정 및 창 제목 갱신
-    gameTimer.Tick();
-    float fps = 1.0f / gameTimer.DeltaTime();
-    window.setTitle("Tetris - FPS: " + std::to_string(static_cast<int>(fps)));
-
     return true;
 }
 
@@ -49,4 +88,32 @@ void Window::AddRenderTargets(const std::vector<std::shared_ptr<const sf::Drawab
 {
     for (const auto& drawable : drawables)
 		renderTargets.push_back(drawable);
+}
+
+void Window::KeyBoardInput(float deltaTime)
+{
+	while (const auto currentKey = keyboard.ReadKey())
+	{
+		if (!currentKey->IsPress())
+			continue;
+
+		switch (currentKey->GetCode())
+		{
+            case VK_LEFT:
+				printf("←\n");
+				break;
+
+            case VK_RIGHT:
+				printf("→\n");
+				break;
+
+			case VK_UP:
+				printf("↑\n");
+                break;
+
+			case VK_DOWN:
+				printf("↓\n");
+                break;
+		}
+	}
 }

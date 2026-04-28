@@ -30,8 +30,7 @@ protected:
 	virtual const PieceType GetPieceType() const = 0;               // 조각의 종류를 반환하는 순수 가상 메소드
 
     void Draw();                        // 조각을 그리는 순수 가상 메소드
-	void Move(Position beforePosition); // 조각을 이동시키는 메소드
-    void Move(MoveDirection direction);
+    void Move(MoveDirection direction); // 조각을 이동시키는 메소드
 
     static constexpr Position iKick[4][4][5] =
     {
@@ -90,8 +89,7 @@ protected:
 
 	std::vector<Position> removeBlockTarget;	// 조각이 이동하거나 회전할 때 제거해야 하는 블록들의 위치를 저장하는 벡터
     Tetris& tetris;	                            // 조각이 속한 테트리스 게임 객체에 대한 참조
-    map_size currentX;
-    map_size currentY;
+    Position current;
     low_uint currentRotation = 0;
 
 	static constexpr float dropInterval = 0.8f;	// 조각이 자동으로 떨어지는 간격 (초 단위)
