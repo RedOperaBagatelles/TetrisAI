@@ -21,7 +21,8 @@ public:
 
     bool Rotate(PieceType pieceType, low_uint rotateShape[4][4][4], bool isClockwise = true); // 조각을 회전시키는 순수 가상 메소드
 
-    bool IsCollision( const map_size rotateShape[4][4], map_size x, map_size y) const;
+    bool IsCollision( const low_uint rotateShape[4][4], map_size x, map_size y) const;
+    void Move(MoveDirection direction); // 조각을 이동시키는 메소드
 
 protected:
 	static int NormalizeRotation(low_uint value);
@@ -30,7 +31,6 @@ protected:
 	virtual const PieceType GetPieceType() const = 0;               // 조각의 종류를 반환하는 순수 가상 메소드
 
     void Draw();                        // 조각을 그리는 순수 가상 메소드
-    void Move(MoveDirection direction); // 조각을 이동시키는 메소드
 
     static constexpr Position iKick[4][4][5] =
     {

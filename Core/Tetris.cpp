@@ -10,6 +10,8 @@
 #include "Pieces/TPiece.h"
 #include "Pieces/ZPiece.h"
 
+#include "Pieces/Piece.h"
+
 #include <memory>
 
 Tetris::Tetris(Window& window) : window(window)

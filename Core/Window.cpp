@@ -1,5 +1,6 @@
 ﻿#include "Window.h"
-#include <Utility/GameTimer.h>
+
+#include "Pieces/Piece.h"
 
 Window* Window::instance = nullptr;
 
@@ -97,21 +98,29 @@ void Window::KeyBoardInput(float deltaTime)
 		if (!currentKey->IsPress())
 			continue;
 
+		auto currentPiece = tetris.GetCurrentPiece();
+		if (currentPiece == nullptr)
+			continue;
+
 		switch (currentKey->GetCode())
 		{
             case VK_LEFT:
+				currentPiece->Move(MoveDirection::Left);
 				printf("←\n");
 				break;
 
             case VK_RIGHT:
+				currentPiece->Move(MoveDirection::Right);
 				printf("→\n");
 				break;
 
 			case VK_UP:
+				//currentPiece->Move(MoveDirection::Up);
 				printf("↑\n");
                 break;
 
 			case VK_DOWN:
+				currentPiece->Move(MoveDirection::Down);
 				printf("↓\n");
                 break;
 		}

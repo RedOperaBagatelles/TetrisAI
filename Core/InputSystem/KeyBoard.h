@@ -61,9 +61,8 @@ private:
 	template<typename T>
 	static void TrimBuffer(std::queue<T>& buffer) noexcept;	// 버퍼보다 이벤트 양이 많을 경우 맨 앞에 있는 버퍼 제거
 
-
-	static constexpr unsigned int nKeys = 256u;			// 키보드 키의 개수
-	static constexpr unsigned int bufferSize = 16u;		// 이벤트 버퍼 개수
+	static constexpr unsigned int nKeys = 256u;				// 키보드 키의 개수
+	static constexpr unsigned int bufferSize = 16u;			// 이벤트 버퍼 개수
 
 	bool autorepeatEnabled = false;	// 지속적으로 누를 때 KeyDown이라고 인정하는지 여부
 

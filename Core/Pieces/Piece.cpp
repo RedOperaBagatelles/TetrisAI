@@ -47,21 +47,35 @@ bool Piece::Rotate(PieceType pieceType, low_uint rotateShape[4][4][4], bool isCl
 	return false;
 }
 
-bool Piece::IsCollision(const map_size rotateShape[4][4], map_size x, map_size y) const
+bool Piece::IsCollision(const low_uint rotateShape[4][4], map_size x, map_size y) const
 {
 	auto board = tetris.GetBoard();		// 게임 보드 가져오기
-	low_uint newRotation = NormalizeRotation(currentRotation + 1);	// 다음 회전 상태 계산
 
-	for (map_size y = 0; y < 4; y++)
+	for (map_size i = 0; i < 4; i++)
 	{
-		for (map_size x = 0; x < 4; x++)
+		for (map_size j = 0; j < 4; j++)
 		{
-			map_size newX = current.x + x, newY = current.y + y;
+			if (rotateShape[i][j] == 0)	// 조각의 빈 공간은 충돌에서 제외
+				continue;
 
-			if (newX < 0 || newX >= tetris.width || newY < 0 || newY >= tetris.height + tetris.topMarginBlock)
+			map_size newX = x + j, newY = y + i;
+
+			if (newX < 0 || newX >= Tetris::width || newY < 0 || newY > Tetris::height + Tetris::topMarginBlock)
 				return true;
 
-			if (board[newY][newX])
+			// 기존 조각이 원래 차지하고 있던 공간인지 확인하여 자신과의 충돌은 무시
+			bool isSelf = false;
+			int localX = static_cast<int>(newX) - static_cast<int>(current.x);
+			int localY = static_cast<int>(newY) - static_cast<int>(current.y);
+
+			if (localX >= 0 && localX < 4 && localY >= 0 && localY < 4)
+			{
+				if (GetRotateShape()[currentRotation][localY][localX] != 0)
+					isSelf = true;
+			}
+
+			// 보드 저장 로직과 동일하게 인덱스 변환 후 충돌 검사
+			if (!isSelf && board[Tetris::maxHeight - (newY + 1)][newX])
 				return true;
 		}
 	}
@@ -83,7 +97,10 @@ void Piece::Draw()
 	for (int i = 0; i < 4; i++)
 	{
 		for (int j = 0; j < 4; j++)
-			map[Tetris::maxHeight - (current.y + i + 1)][current.x + j] = rotateShape[currentRotation][i][j] * (low_uint)pieceType;	// 조각의 블록을 게임 보드에 배치
+		{
+			if (rotateShape[currentRotation][i][j] != 0)
+				map[Tetris::maxHeight - (current.y + i + 1)][current.x + j] = (low_uint)pieceType;	// 조각의 블록을 게임 보드에 배치
+		}
 	}
 
 	// 이전에 있는 조각의 블록을 게임 보드에서 제거
@@ -98,24 +115,31 @@ void Piece::Draw()
 void Piece::Move(MoveDirection moveDirection)
 {
 	auto board = tetris.GetBoard();	// 게임 보드 가져오기
-	Position before = current;		// 이동하기 전의 위치 저장
+	Position next = current;		// 이동할 위치를 계산하기 위해 현재 위치 복사
 
 	switch (moveDirection)
 	{
 		case MoveDirection::Left:
-			current.x--;
+			next.x--;
 			break;
 
 		case MoveDirection::Right:
-			current.x++;
+			next.x++;
 			break;
 
 		case MoveDirection::Down:
-			current.y++;
+			next.y++;
 			break;
 	}
 
 	auto& rotateShape = GetRotateShape();
+
+	// current가 변경되기 전에 다음 위치인 next를 이용해 충돌 검사
+	if (IsCollision(rotateShape[currentRotation], next.x, next.y))
+		return;	// 충돌이 발생하면 이동을 취소하고 리턴
+
+	Position before = current;
+	current = next;
 
 	const int deltaX = static_cast<int>(current.x) - static_cast<int>(before.x);
 	const int deltaY = static_cast<int>(current.y) - static_cast<int>(before.y);

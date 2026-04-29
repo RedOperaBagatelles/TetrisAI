@@ -17,8 +17,6 @@ int main()
         gameTimer.Tick();
 		const float deltaTime = gameTimer.DeltaTime();
 
-		window.KeyBoardInput(deltaTime);
-
         window.Update(deltaTime);
         isSucceed = window.Render();
     }

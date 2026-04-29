@@ -23,6 +23,8 @@ public:
 	void AddRenderTarget(const std::shared_ptr<const sf::Drawable>& drawable);
 	void AddRenderTargets(const std::vector<std::shared_ptr<const sf::Drawable>>& drawables);
 
+	Tetris& GetTetris() { return tetris; }
+
 private:
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 

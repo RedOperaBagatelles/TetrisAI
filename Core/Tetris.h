@@ -2,7 +2,6 @@
 
 #include "Core/GameLoop.h"
 #include "Core/PiecesQueue.h"
-#include "Core/Pieces/Piece.h"
 #include "SFML/Graphics.hpp"
 #include "Utility/Type.h"
 
@@ -10,6 +9,7 @@
 #include <memory>
 
 class Window;
+class Piece;
 
 class Tetris : public GameLoop
 {
@@ -27,6 +27,8 @@ public:
 	void Ready(int x, int y);
 
 	map_size (*GetBoard())[width] { return board; }	// 게임 보드의 2차원 배열을 반환하는 메소드
+	
+	std::shared_ptr<Piece> GetCurrentPiece() const { return currentPiece; }
 
 private:
 	void CreatePiece();
