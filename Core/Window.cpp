@@ -137,6 +137,18 @@ void Window::KeyBoardInput(float deltaTime)
 				currentPiece->HardDrop();
 				printf("Space\n");
 				break;
+
+            // 반시계 방향 회전
+            case 'Z':
+                currentPiece->Rotate(false);	
+                printf("Z\n");
+				break;
+
+            // 시계 방향 회전
+            case 'X':
+                currentPiece->Rotate(true);	
+				printf("X\n");
+                break;
 		}
 	}
 }

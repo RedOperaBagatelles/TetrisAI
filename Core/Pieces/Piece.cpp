@@ -21,13 +21,22 @@ void Piece::Update(float deltaTime)
 	}
 }
 
-bool Piece::Rotate(PieceType pieceType, low_uint rotateShape[4][4][4], bool isClockwise)
+void Piece::Rotate(bool isClockwise)
 {
+	PieceType pieceType = GetPieceType();
+	auto& rotateShape = GetRotateShape();
+
 	int movement = isClockwise ? 1 : -1;									// 회전 방향에 따라 이동량 결정
 	low_uint nextRotation = NormalizeRotation(currentRotation + movement);	// 다음 회전 상태 계산
 
 	// 호출한 클래스가 IPiece인 경우 iKick 데이터를 사용, 그렇지 않으면 normalKick 데이터를 사용
-	auto& kick = (pieceType == PieceType::I) ? iKick[currentRotation][nextRotation] : normalKick[currentRotation][nextRotation];
+	const Position* kick = nullptr;
+
+	if (pieceType == PieceType::I)
+		kick = iKick[currentRotation][nextRotation];
+
+	else
+		kick = normalKick[currentRotation][nextRotation];
 
 	// 충돌이 발생하지 않는 위치를 찾을 때까지 5가지 킥 데이터를 시도
 	for (map_size i = 0; i < 5; i++)
@@ -37,15 +46,47 @@ bool Piece::Rotate(PieceType pieceType, low_uint rotateShape[4][4][4], bool isCl
 
 		if (!IsCollision(rotateShape[nextRotation], nextX, nextY))
 		{
+			Position before = current;
 			current.x = nextX;
 			current.y = nextY;
-			currentRotation = nextRotation;
 
-			return true;
+			const int deltaX = static_cast<int>(current.x) - static_cast<int>(before.x);
+			const int deltaY = static_cast<int>(current.y) - static_cast<int>(before.y);
+
+			// 회전 전후 형태 변화와 위치 변화를 모두 고려하여 제거할 블록 추적
+			for (int row = 0; row < 4; row++)
+			{
+				for (int col = 0; col < 4; col++)
+				{
+					if (rotateShape[currentRotation][row][col] == 0)
+						continue;
+
+					const int beforeX = static_cast<int>(before.x) + col;
+					const int beforeY = static_cast<int>(before.y) + row;
+
+					if (beforeX < 0 || beforeX >= Tetris::width || beforeY < 0 || beforeY >= Tetris::maxHeight)
+						continue;
+
+					// 회전 후 같은 위치에 블록이 있는지 확인
+					const int overlapLocalX = col - deltaX;
+					const int overlapLocalY = row - deltaY;
+
+					const bool isOverlappedByNext =
+						overlapLocalX >= 0 && overlapLocalX < 4 &&
+						overlapLocalY >= 0 && overlapLocalY < 4 &&
+						rotateShape[nextRotation][overlapLocalY][overlapLocalX] != 0;
+
+					// 회전 후에도 블록이 있는 같은 위치라면 제거 대상에서 제외
+					if (!isOverlappedByNext)
+						removeBlockTarget.emplace_back(beforeX, beforeY);
+				}
+			}
+
+			currentRotation = nextRotation;
+			Draw();	// 회전 후 그려줌
+			return;
 		}
 	}
-
-	return false;
 }
 
 bool Piece::IsCollision(const low_uint toRotateShape[4][4], map_size x, map_size y, bool isBeforePlace) const
