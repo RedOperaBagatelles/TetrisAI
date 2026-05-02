@@ -12,6 +12,7 @@ public:
     IPiece(class Tetris& tetris);
 	~IPiece() override = default;
 
+	void Initialize() override;
 	void Update(float deltaTime) override;
 
 protected:

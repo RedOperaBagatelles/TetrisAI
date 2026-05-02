@@ -6,6 +6,11 @@
 
 ZPiece::ZPiece(Tetris& tetris) : Piece(3, 0, tetris)
 {
+
+}
+
+void ZPiece::Initialize()
+{
 	Draw();
 }
 

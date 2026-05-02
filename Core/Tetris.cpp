@@ -57,6 +57,13 @@ void Tetris::Ready(int x, int y)
 
 	currentRenderPieces.clear();
 
+	// 게임 보드 초기화
+	for (int i = 0; i < maxHeight; i++)
+	{
+		for (int j = 0; j < width; j++)
+			board[i][j] = 0;
+	}
+
 	const auto walls = Pieces::GetRenderWalls(x, y);
 	currentRenderPieces.insert(currentRenderPieces.end(), walls.begin(), walls.end());
 
@@ -72,7 +79,7 @@ void Tetris::Ready(int x, int y)
 	CreatePiece();
 }
 
-void Tetris::CreatePiece()
+bool Tetris::CreatePiece()
 {
 	PieceType currentPieceType = piecesQueue.GetPiece();	// 현재 조각의 종류 가져오기
 
@@ -87,4 +94,15 @@ void Tetris::CreatePiece()
 		case PieceType::Z: currentPiece = std::make_shared<ZPiece>(*this); break;
 		default: break;
 	}
+
+	// 현재 조각이 배치할 수 있는지 확인
+	auto& rotationShape = currentPiece->GetRotateShape();
+	Position position = currentPiece->GetPosition();
+
+	if (currentPiece->IsCollision(rotationShape[0], position.x, position.y, false))
+		return false;
+
+	currentPiece->Initialize();	// 현재 조각 초기화
+
+	return true;
 }

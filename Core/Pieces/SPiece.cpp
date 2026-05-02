@@ -6,6 +6,11 @@
 
 SPiece::SPiece(Tetris& tetris) : Piece(4, 0, tetris)
 {
+
+}
+
+void SPiece::Initialize()
+{
 	Draw();
 }
 

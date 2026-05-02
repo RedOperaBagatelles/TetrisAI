@@ -1,6 +1,7 @@
 ﻿#include "Piece.h"
 
 #include "Core/Tetris.h"
+#include <memory>
 
 Piece::Piece(map_size x, map_size y, Tetris& tetris) : current{x, y}, tetris(tetris)
 {
@@ -47,15 +48,16 @@ bool Piece::Rotate(PieceType pieceType, low_uint rotateShape[4][4][4], bool isCl
 	return false;
 }
 
-bool Piece::IsCollision(const low_uint rotateShape[4][4], map_size x, map_size y) const
+bool Piece::IsCollision(const low_uint toRotateShape[4][4], map_size x, map_size y, bool isBeforePlace) const
 {
-	auto board = tetris.GetBoard();		// 게임 보드 가져오기
+	auto board = tetris.GetBoard();				// 게임 보드 가져오기
+	auto fromRotateShape = GetRotateShape();	// 현재 조각의 회전 형태 가져오기
 
 	for (map_size i = 0; i < 4; i++)
 	{
 		for (map_size j = 0; j < 4; j++)
 		{
-			if (rotateShape[i][j] == 0)	// 조각의 빈 공간은 충돌에서 제외
+			if (toRotateShape[i][j] == 0)	// 조각의 빈 공간은 충돌에서 제외
 				continue;
 
 			map_size newX = x + j, newY = y + i;
@@ -63,15 +65,19 @@ bool Piece::IsCollision(const low_uint rotateShape[4][4], map_size x, map_size y
 			if (newX < 0 || newX >= Tetris::width || newY < 0 || newY > Tetris::height + Tetris::topMarginBlock)
 				return true;
 
-			// 기존 조각이 원래 차지하고 있던 공간인지 확인하여 자신과의 충돌은 무시
 			bool isSelf = false;
-			int localX = static_cast<int>(newX) - static_cast<int>(current.x);
-			int localY = static_cast<int>(newY) - static_cast<int>(current.y);
 
-			if (localX >= 0 && localX < 4 && localY >= 0 && localY < 4)
+			// 기존 조각이 원래 차지하고 있던 공간인지 확인하여 자신과의 충돌은 무시
+			if (isBeforePlace)
 			{
-				if (GetRotateShape()[currentRotation][localY][localX] != 0)
-					isSelf = true;
+				int localX = static_cast<int>(newX) - static_cast<int>(current.x);
+				int localY = static_cast<int>(newY) - static_cast<int>(current.y);
+
+				if (localX >= 0 && localX < 4 && localY >= 0 && localY < 4)
+				{
+					if (fromRotateShape[currentRotation][localY][localX] != 0)
+						isSelf = true;
+				}
 			}
 
 			// 보드 저장 로직과 동일하게 인덱스 변환 후 충돌 검사
@@ -96,10 +102,14 @@ void Piece::Draw()
 
 	for (int i = 0; i < 4; i++)
 	{
+		map_size newY = Tetris::maxHeight - (current.y + i + 1);
+
 		for (int j = 0; j < 4; j++)
 		{
+			map_size newX = current.x + j;
+
 			if (rotateShape[currentRotation][i][j] != 0)
-				map[Tetris::maxHeight - (current.y + i + 1)][current.x + j] = (low_uint)pieceType;	// 조각의 블록을 게임 보드에 배치
+				map[newY][newX] = (low_uint)pieceType;	// 조각의 블록을 게임 보드에 배치
 		}
 	}
 
@@ -136,7 +146,13 @@ void Piece::Move(MoveDirection moveDirection)
 
 	// current가 변경되기 전에 다음 위치인 next를 이용해 충돌 검사
 	if (IsCollision(rotateShape[currentRotation], next.x, next.y))
+	{
+		if (moveDirection == MoveDirection::Down)
+			Place();	// 아래로 이동할 때 충돌이 발생하면 조각을 고정
+
 		return;	// 충돌이 발생하면 이동을 취소하고 리턴
+	}
+		
 
 	Position before = current;
 	current = next;
@@ -172,4 +188,15 @@ void Piece::Move(MoveDirection moveDirection)
 	}
 
 	Draw();	// 이동 후 자식 클래스의 Draw() 호출
+}
+
+void Piece::Place()
+{
+	Draw();	// 조각을 게임 보드에 고정
+
+	std::shared_ptr<Piece> currentPiece = tetris.GetCurrentPiece();
+	currentPiece = nullptr;	// 현재 조각이 고정되었으므로 Tetris 객체의 currentPiece를 nullptr로 설정하여 새로운 조각이 생성될 수 있도록 함
+
+	if (!tetris.CreatePiece())
+		tetris.Initialize(); // 블록 생성을 할 수 없는 경우(게임 오버) 게임 초기화
 }

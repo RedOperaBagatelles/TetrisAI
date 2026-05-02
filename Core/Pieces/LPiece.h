@@ -9,6 +9,7 @@ class LPiece : public Piece
 public:
 	LPiece(class Tetris& tetris);
 
+	void Initialize() override;
 	void Update(float deltaTime) override;
 
 protected:

@@ -6,6 +6,11 @@
 
 OPiece::OPiece(Tetris& tetris) : Piece(4, 0, tetris) // O 조각은 초기 위치가 (4, 0)으로 설정됨
 {
+
+}
+
+void OPiece::Initialize()
+{
 	Draw();
 }
 

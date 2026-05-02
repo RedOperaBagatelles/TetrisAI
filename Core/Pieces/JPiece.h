@@ -10,6 +10,7 @@ public:
 	JPiece(class Tetris& tetris);
 	~JPiece() override = default;
 
+	void Initialize() override;
 	void Update(float deltaTime) override;
 
 protected:

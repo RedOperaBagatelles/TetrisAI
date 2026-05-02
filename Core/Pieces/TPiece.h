@@ -10,6 +10,7 @@ public:
     TPiece(class Tetris& tetris);
     ~TPiece() override = default;
 
+	void Initialize() override;
 	void Update(float deltaTime) override;
 
 protected:

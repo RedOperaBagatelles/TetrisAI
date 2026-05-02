@@ -10,6 +10,7 @@ public:
     ZPiece(class Tetris& tetris);
     ~ZPiece() override = default;
 
+	void Initialize() override;
 	void Update(float deltaTime) override;
 
 protected:

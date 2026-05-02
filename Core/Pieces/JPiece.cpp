@@ -6,6 +6,11 @@
 
 JPiece::JPiece(Tetris& tetris) : Piece(3, 0, tetris)
 {
+
+}
+
+void JPiece::Initialize()
+{
 	Draw();
 }
 

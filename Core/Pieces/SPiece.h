@@ -10,6 +10,7 @@ public:
 	SPiece(class Tetris& tetris);
     ~SPiece() override = default;
 
+	void Initialize() override;
 	void Update(float deltaTime) override;
 
 protected:

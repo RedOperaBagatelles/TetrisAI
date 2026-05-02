@@ -6,6 +6,11 @@
 
 LPiece::LPiece(Tetris& tetris) : Piece(3, 0, tetris)
 {
+
+}
+
+void LPiece::Initialize()
+{
 	Draw();
 }
 

@@ -25,14 +25,13 @@ public:
 	static constexpr map_size maxHeight = height + topMarginBlock + 1;	// 게임 보드의 최대 높이 (보이지 않는 블록 영역 포함)
 
 	void Ready(int x, int y);
+	bool CreatePiece();
 
 	map_size (*GetBoard())[width] { return board; }	// 게임 보드의 2차원 배열을 반환하는 메소드
 	
 	std::shared_ptr<Piece> GetCurrentPiece() const { return currentPiece; }
 
 private:
-	void CreatePiece();
-
 	std::vector<std::shared_ptr<const sf::Drawable>> currentRenderPieces;
 	std::shared_ptr<class Piece> currentPiece;					// 현재 조각 객체
 
