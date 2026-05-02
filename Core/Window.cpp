@@ -93,23 +93,33 @@ void Window::AddRenderTargets(const std::vector<std::shared_ptr<const sf::Drawab
 
 void Window::KeyBoardInput(float deltaTime)
 {
+	auto currentPiece = tetris.GetCurrentPiece();
+
+	if (currentPiece == nullptr)
+		return;
+
+	// 아래쪽 방향키를 누르고 있는지 확인 (소프트 드롭)
+	if (keyboard.IsPressed(VK_DOWN))
+		currentPiece->SoftDrop(deltaTime);
+
+	// 키를 뗐을 때 타이머 초기화
+	else
+		currentPiece->StopSoftDrop();
+
+	// 나머지 키 입력 처리 (일반 키 이벤트)
 	while (const auto currentKey = keyboard.ReadKey())
 	{
 		if (!currentKey->IsPress())
 			continue;
 
-		auto currentPiece = tetris.GetCurrentPiece();
-		if (currentPiece == nullptr)
-			continue;
-
 		switch (currentKey->GetCode())
 		{
-            case VK_LEFT:
+			case VK_LEFT:
 				currentPiece->Move(MoveDirection::Left);
 				printf("←\n");
 				break;
 
-            case VK_RIGHT:
+			case VK_RIGHT:
 				currentPiece->Move(MoveDirection::Right);
 				printf("→\n");
 				break;
@@ -117,12 +127,16 @@ void Window::KeyBoardInput(float deltaTime)
 			case VK_UP:
 				//currentPiece->Move(MoveDirection::Up);
 				printf("↑\n");
-                break;
+				break;
 
 			case VK_DOWN:
-				currentPiece->Move(MoveDirection::Down);
-				printf("↓\n");
-                break;
+				// 아래쪽 키는 이미 위에서 처리하므로 여기서는 무시
+				break;
+
+			case VK_SPACE:
+				currentPiece->HardDrop();
+				printf("Space\n");
+				break;
 		}
 	}
 }

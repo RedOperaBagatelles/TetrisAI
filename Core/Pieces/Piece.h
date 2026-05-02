@@ -22,8 +22,12 @@ public:
     bool Rotate(PieceType pieceType, low_uint rotateShape[4][4][4], bool isClockwise = true); // 조각을 회전시키는 순수 가상 메소드
 
     bool IsCollision(const low_uint toRotateShape[4][4], map_size x, map_size y, bool isBeforePlace = true) const;
-    void Move(MoveDirection direction); // 조각을 이동시키는 메소드
+    void Move(MoveDirection direction);     // 조각을 이동시키는 메소드
+	void HardDrop();                        // 조각을 즉시 아래로 이동시키는 메소드
+	void SoftDrop(float deltaTime);         // 조각을 한 칸 아래로 이동시키는 메소드
+    void StopSoftDrop();                    // 소프트 드롭 타이머를 초기화하는 메소드
     void Place();
+
     Position GetPosition() const { return current; }
 
     virtual const low_uint(&GetRotateShape() const)[4][4][4] = 0;	// 조각의 회전 형태를 반환하는 순수 가상 메소드
@@ -97,4 +101,8 @@ protected:
 
 	static constexpr float dropInterval = 0.8f;	// 조각이 자동으로 떨어지는 간격 (초 단위)
 	float dropRemainTime = 0.0f;                // 다음 자동 낙하까지 남은 시간 (초 단위)
+
+    // 소프트 드롭 관련 변수
+    float softDropTimer = 0.0f;							// 소프트 드롭 타이머
+    constexpr static float softDropInterval = 0.05f;	// 소프트 드롭 간격 (초)
 };

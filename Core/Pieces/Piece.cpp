@@ -190,6 +190,32 @@ void Piece::Move(MoveDirection moveDirection)
 	Draw();	// 이동 후 자식 클래스의 Draw() 호출
 }
 
+void Piece::HardDrop()
+{
+	auto& rotateShape = GetRotateShape();
+
+	while (!IsCollision(rotateShape[currentRotation], current.x, current.y + 1))
+		Move(MoveDirection::Down);	// 조각이 더 이상 아래로 이동할 수 없을 때까지 아래로 이동
+
+	Place();	// 조각을 고정
+}
+
+void Piece::SoftDrop(float deltaTime)
+{
+	softDropTimer += deltaTime;
+
+	if (softDropTimer >= softDropInterval)
+	{
+		Move(MoveDirection::Down);
+		softDropTimer = 0.0f;
+	}
+}
+
+void Piece::StopSoftDrop()
+{
+	softDropTimer = 0.0f;
+}
+
 void Piece::Place()
 {
 	Draw();	// 조각을 게임 보드에 고정
