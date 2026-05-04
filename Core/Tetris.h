@@ -26,7 +26,8 @@ public:
 
 	void Ready(int x, int y);
 	bool CreatePiece();
-	void AddRenderPiece(const std::shared_ptr<const sf::Drawable>& piece);	// 렌더링할 조각을 추가하는 메소드
+	void RemoveLine();
+	void AddRenderPiece(const std::shared_ptr<const sf::Drawable>& piece);					// 렌더링할 조각을 추가하는 메소드
 	void AddRenderPieces(const std::vector<std::shared_ptr<const sf::Drawable>>& pieces);	// 렌더링할 조각들을 추가하는 메소드
 
 	map_size (*GetBoard())[width] { return board; }		// 게임 보드의 2차원 배열을 반환하는 메소드
@@ -45,4 +46,6 @@ private:
 
 	map_size startX = 0;
 	map_size startY = 0;
+
+	int score = 0;	// 현재 점수
 };

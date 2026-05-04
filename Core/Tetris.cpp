@@ -107,6 +107,48 @@ bool Tetris::CreatePiece()
 	return true;
 }
 
+void Tetris::RemoveLine()
+{
+	int linesRemoved = 0;
+
+	// 아래에서 위로 올라가면서 줄을 검사
+	for (int i = 0; i < height; i++)
+	{
+		bool isFull = true;
+
+		for (int j = 0; j < width; j++)
+		{
+			if (board[i][j] == 0)
+			{
+				isFull = false;
+				break;
+			}
+		}
+
+		if (isFull)
+			linesRemoved++;
+
+		else if (linesRemoved > 0)
+		{
+			// 삭제된 줄 수만큼 위의 줄을 아래로 내림
+			for (int j = 0; j < width; j++)
+				board[i - linesRemoved][j] = board[i][j];
+		}
+	}
+
+	if (linesRemoved > 0)
+	{
+		// 상단의 비워진 줄들을 초기화
+		for (int i = height - linesRemoved; i < height; i++)
+		{
+			for (int j = 0; j < width; j++)
+				board[i][j] = 0;
+		}
+
+		score += linesRemoved;	// 점수 증가
+	}
+}
+
 void Tetris::AddRenderPiece(const std::shared_ptr<const sf::Drawable>& piece)
 {
 	currentRenderPieces.push_back(piece);
