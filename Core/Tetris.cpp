@@ -42,11 +42,11 @@ void Tetris::Update(float deltaTime)
 			if (board[i][j] == 0)
 				continue;
 
-			Pieces pieces;
-			currentRenderPieces.push_back(pieces.GetRenderOnePices(j, height - i - 2, static_cast<PieceType>(board[i][j]), startX, startY));
+			currentRenderPieces.push_back(Pieces::GetRenderOnePices(j, height - i - 2, static_cast<PieceType>(board[i][j]), startX, startY));
 		}
 	}
 
+	currentPiece->ShowGhost();
 	window.AddRenderTargets(currentRenderPieces);
 }
 
@@ -105,4 +105,14 @@ bool Tetris::CreatePiece()
 	currentPiece->Initialize();	// 현재 조각 초기화
 
 	return true;
+}
+
+void Tetris::AddRenderPiece(const std::shared_ptr<const sf::Drawable>& piece)
+{
+	currentRenderPieces.push_back(piece);
+}
+
+void Tetris::AddRenderPieces(const std::vector<std::shared_ptr<const sf::Drawable>>& pieces)
+{
+	currentRenderPieces.insert(currentRenderPieces.end(), pieces.begin(), pieces.end());
 }

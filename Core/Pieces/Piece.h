@@ -7,7 +7,7 @@
 
 class Tetris;
 
-enum class PieceType { None, I, J, L, O, S, T, Z };				// 테트리스 조각의 종류를 나타내는 열거형
+enum class PieceType { None, I, J, L, O, S, T, Z, Ghost };		// 테트리스 조각의 종류를 나타내는 열거형
 enum class PieceRotationType { Spawn, Right, Reverse, Left };	// 테트리스 조각의 회전 상태를 나타내는 열거형
 enum class MoveDirection { None, Left, Right, Down };           // 조각의 이동 방향을 나타내는 열거형
 
@@ -27,6 +27,8 @@ public:
 	void SoftDrop(float deltaTime);         // 조각을 한 칸 아래로 이동시키는 메소드
     void StopSoftDrop();                    // 소프트 드롭 타이머를 초기화하는 메소드
     void Place();
+
+	void ShowGhost();                       // 고스트 조각을 표시하는 메소드
 
     Position GetPosition() const { return current; }
 

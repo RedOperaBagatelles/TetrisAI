@@ -1,6 +1,8 @@
 ﻿#include "Piece.h"
 
 #include "Core/Tetris.h"
+#include "Core/Pieces.h"
+
 #include <memory>
 
 Piece::Piece(map_size x, map_size y, Tetris& tetris) : current{x, y}, tetris(tetris)
@@ -266,4 +268,33 @@ void Piece::Place()
 
 	if (!tetris.CreatePiece())
 		tetris.Initialize(); // 블록 생성을 할 수 없는 경우(게임 오버) 게임 초기화
+}
+
+void Piece::ShowGhost()
+{
+	auto& rotateShape = GetRotateShape();
+	Position ghostPos = current;
+
+	while (!IsCollision(rotateShape[currentRotation], ghostPos.x, ghostPos.y + 1, true))
+		ghostPos.y++;	// 고스트 조각이 더 이상 아래로 이동할 수 없을 때까지 아래로 이동
+
+	// 현재 조각 위치 기준으로 고스트 조각의 위치에 고스트 블록을 그려줌
+	std::vector<std::shared_ptr<const sf::Drawable>> ghostBlocks;
+	for (int i = 0; i < 4; i++)
+	{
+		map_size newY = ghostPos.y + i - 4;
+
+		for (int j = 0; j < 4; j++)
+		{
+			map_size newX = ghostPos.x + j;
+
+			if (rotateShape[currentRotation][i][j] != 0)
+			{
+				auto ghostBlock = Pieces::GetRenderOnePices(newX, newY, PieceType::Ghost, tetris.GetStartX(), tetris.GetStartY());
+				ghostBlocks.push_back(ghostBlock);
+			}
+		}
+	}
+
+	tetris.AddRenderPieces(ghostBlocks);	// 고스트 블록들을 Tetris 객체에 추가하여 렌더링되도록 함
 }
