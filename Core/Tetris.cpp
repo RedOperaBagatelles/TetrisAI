@@ -12,6 +12,9 @@
 
 #include "Pieces/Piece.h"
 
+#include <SFML/Graphics/Text.hpp>
+
+#include <deque>
 #include <memory>
 
 Tetris::Tetris(Window& window) : window(window)
@@ -21,6 +24,13 @@ Tetris::Tetris(Window& window) : window(window)
 
 void Tetris::Initialize()
 {
+	font.openFromFile("C:/Windows/Fonts/CascadiaCode.ttf");
+	scoreText = std::make_shared<sf::Text>(font);
+	scoreText->setCharacterSize(16);
+	scoreText->setFillColor(sf::Color::White);
+	scoreText->setPosition({ (float)startX + 300, (float)startY + 445 });
+	UpdateScoreText();
+
 	Ready(50, 50);
 }
 
@@ -47,6 +57,8 @@ void Tetris::Update(float deltaTime)
 	}
 
 	currentPiece->ShowGhost();
+	UpdateScoreText();
+	UpdatePieceUI();
 	window.AddRenderTargets(currentRenderPieces);
 }
 
@@ -77,6 +89,107 @@ void Tetris::Ready(int x, int y)
 	board[0][6] = 7;	// Z
 
 	CreatePiece();
+}
+
+void Tetris::UpdateScoreText()
+{
+	if (scoreText == nullptr)
+		return;
+
+	scoreText->setString("Score : " + std::to_string(score));
+
+	currentRenderPieces.push_back(scoreText);
+}
+
+void Tetris::UpdatePieceUI()
+{
+	sf::RectangleShape holdingPieceUIBackground(sf::Vector2f(85, 85));
+	holdingPieceUIBackground.setFillColor(sf::Color(50, 50, 50));
+	holdingPieceUIBackground.setPosition(sf::Vector2f(startX + 250, startY));
+
+	// 다음 조각 UI 배경 설정
+	sf::RectangleShape nextPieceUIBackground(sf::Vector2f(85, 275));
+	nextPieceUIBackground.setFillColor(sf::Color(50, 50, 50));
+	nextPieceUIBackground.setPosition(sf::Vector2f(startX + 250, startY + 110));
+
+	currentRenderPieces.push_back(std::make_shared<sf::RectangleShape>(holdingPieceUIBackground));
+	currentRenderPieces.push_back(std::make_shared<sf::RectangleShape>(nextPieceUIBackground));
+	
+	// 다음 조각 큐에서 다음 조각들의 종류를 가져옴
+	const std::deque<PieceType>& nextPieces = piecesQueue.GetNextPieces();
+
+	// 다음 조각 UI에 조각들을 렌더링하기 위한 초기 Y 오프셋 설정 (10px)
+	float currentYOffset = 10.0f;
+	
+	// 다음 조각 큐에서 최대 5개의 조각을 렌더링 (UI 공간에 맞게)
+	for (size_t i = 0; i < nextPieces.size() && i < 5; ++i)
+	{
+		PieceType pieceType = nextPieces[i];
+		std::shared_ptr<Piece> piece;
+
+		// 다음 조각의 종류에 따라 해당 조각 객체를 생성
+		switch (pieceType)
+		{
+			case PieceType::I: piece = std::make_shared<IPiece>(*this); break;
+			case PieceType::J: piece = std::make_shared<JPiece>(*this); break;
+			case PieceType::L: piece = std::make_shared<LPiece>(*this); break;
+			case PieceType::O: piece = std::make_shared<OPiece>(*this); break;
+			case PieceType::S: piece = std::make_shared<SPiece>(*this); break;
+			case PieceType::T: piece = std::make_shared<TPiece>(*this); break;
+			case PieceType::Z: piece = std::make_shared<ZPiece>(*this); break;
+			default: continue;
+		}
+
+		sf::Color pieceColor = Pieces::colors[static_cast<int>(pieceType)]; // 조각 종류에 따른 색상 가져오기
+		const auto& rotationShape = piece->GetRotateShape()[0];
+
+		int minRow = 4, maxRow = -1;
+
+		// 다음 조각의 회전 형태에서 상단과 하단의 빈 행을 제외하기 위해 최소 행과 최대 행을 계산
+		for (int row = 0; row < 4; row++)
+		{
+			for (int col = 0; col < 4; col++)
+			{
+				if (rotationShape[row][col] == 0)
+					continue;
+
+				if (row < minRow) 
+					minRow = row;
+
+				if (row > maxRow)
+					maxRow = row;
+			}
+		}
+
+		// 만약 모든 행이 빈 행이라면 (즉, 조각이 없는 경우) 렌더링을 건너뜀
+		if (maxRow == -1)
+			continue;
+
+		// 다음 조각의 회전 형태에서 유효한 블록들만 렌더링 (빈 행 제외)
+		for (int row = minRow; row <= maxRow; ++row)
+		{
+			for (int col = 0; col < 4; ++col)
+			{
+				if (rotationShape[row][col] == 0)
+					continue;
+
+				// 유효한 블록을 렌더링하기 위한 사각형 객체 생성
+				sf::RectangleShape block(sf::Vector2f(15, 15));
+				block.setFillColor(pieceColor);
+
+				block.setPosition(sf::Vector2f(
+					nextPieceUIBackground.getPosition().x + 10 + col * 17,
+					nextPieceUIBackground.getPosition().y + currentYOffset + (row - minRow) * 17)
+				);
+
+				currentRenderPieces.push_back(std::make_shared<sf::RectangleShape>(block));
+			}
+		}
+
+		// 다음 조각의 회전 형태에서 유효한 블록들의 높이에 따라 Y 오프셋을 증가시켜 다음 조각이 UI에 겹치지 않도록 함
+		int pieceHeight = (maxRow - minRow + 1);
+		currentYOffset += (pieceHeight + 1) * 17.0f;
+	}
 }
 
 bool Tetris::CreatePiece()
@@ -146,6 +259,7 @@ void Tetris::RemoveLine()
 		}
 
 		score += linesRemoved;	// 점수 증가
+		UpdateScoreText();
 	}
 }
 

@@ -18,7 +18,6 @@ public:
 	// 해당 위치에 해당하는 PieceType의 렌더링용 사각형을 반환
 	static std::shared_ptr<const sf::RectangleShape> GetRenderOnePices(int x, int y, PieceType type, int offsetX, int offsetY);
 
-private:
 	// 각 PieceType에 해당하는 색상을 저장하는 배열
 	static constexpr std::array<sf::Color, 9> colors =
 	{
