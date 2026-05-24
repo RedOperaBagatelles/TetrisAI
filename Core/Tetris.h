@@ -28,6 +28,7 @@ public:
 	void UpdatePieceUI();
 	void Ready(int x, int y);
 	bool CreatePiece();
+	void HoldPiece();
 	void RemoveLine();
 	void AddRenderPiece(const std::shared_ptr<const sf::Drawable>& piece);					// 렌더링할 조각을 추가하는 메소드
 	void AddRenderPieces(const std::vector<std::shared_ptr<const sf::Drawable>>& pieces);	// 렌더링할 조각들을 추가하는 메소드
@@ -51,5 +52,10 @@ private:
 	map_size startX = 0;
 	map_size startY = 0;
 
-	int score = 0;	// 현재 점수
+	int score = 0;
+
+	PieceType holdPieceType = PieceType::None;	// 현재 hold한 조각의 종류
+	bool hasUsedHold = false;					// 해당 턴에 홀드를 사용했는지 여부 (홀드는 한 턴에 한 번만 사용할 수 있음)
+
+	bool CreatePieceOfType(PieceType type);
 };

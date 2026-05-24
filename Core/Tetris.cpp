@@ -24,7 +24,12 @@ Tetris::Tetris(Window& window) : window(window)
 
 void Tetris::Initialize()
 {
-	font.openFromFile("C:/Windows/Fonts/CascadiaCode.ttf");
+	bool isFontLoaded = font.openFromFile("C:/Windows/Fonts/CascadiaCode.ttf");
+
+	// 폰트 로드 실패 처리 (예: 예외 던지기, 기본 폰트 사용 등)
+	if (!isFontLoaded)
+		throw std::runtime_error("Failed to load font");
+
 	scoreText = std::make_shared<sf::Text>(font);
 	scoreText->setCharacterSize(16);
 	scoreText->setFillColor(sf::Color::White);
@@ -67,6 +72,9 @@ void Tetris::Ready(int x, int y)
 	startX = x;
 	startY = y;
 
+	holdPieceType = PieceType::None;
+	hasUsedHold = false;
+
 	currentRenderPieces.clear();
 
 	// 게임 보드 초기화
@@ -105,16 +113,83 @@ void Tetris::UpdatePieceUI()
 {
 	sf::RectangleShape holdingPieceUIBackground(sf::Vector2f(85, 85));
 	holdingPieceUIBackground.setFillColor(sf::Color(50, 50, 50));
-	holdingPieceUIBackground.setPosition(sf::Vector2f(startX + 250, startY));
+	holdingPieceUIBackground.setPosition(sf::Vector2f((float)(startX + 250), (float)startY));
 
 	// 다음 조각 UI 배경 설정
 	sf::RectangleShape nextPieceUIBackground(sf::Vector2f(85, 275));
 	nextPieceUIBackground.setFillColor(sf::Color(50, 50, 50));
-	nextPieceUIBackground.setPosition(sf::Vector2f(startX + 250, startY + 110));
+	nextPieceUIBackground.setPosition(sf::Vector2f((float)(startX + 250), (float)(startY + 110)));
 
 	currentRenderPieces.push_back(std::make_shared<sf::RectangleShape>(holdingPieceUIBackground));
 	currentRenderPieces.push_back(std::make_shared<sf::RectangleShape>(nextPieceUIBackground));
-	
+
+	// 홀드 중인 조각 렌더링
+	if (holdPieceType != PieceType::None)
+	{
+		std::shared_ptr<Piece> holdPiece;
+
+		switch (holdPieceType)
+		{
+			case PieceType::I: holdPiece = std::make_shared<IPiece>(*this); break;
+			case PieceType::J: holdPiece = std::make_shared<JPiece>(*this); break;
+			case PieceType::L: holdPiece = std::make_shared<LPiece>(*this); break;
+			case PieceType::O: holdPiece = std::make_shared<OPiece>(*this); break;
+			case PieceType::S: holdPiece = std::make_shared<SPiece>(*this); break;
+			case PieceType::T: holdPiece = std::make_shared<TPiece>(*this); break;
+			case PieceType::Z: holdPiece = std::make_shared<ZPiece>(*this); break;
+			default: holdPiece = nullptr; break;
+		}
+
+		if (holdPiece == nullptr)
+			return;
+
+		sf::Color holdColor = Pieces::colors[static_cast<int>(holdPieceType)];
+
+		if (hasUsedHold)
+			holdColor = sf::Color(holdColor.r / 2, holdColor.g / 2, holdColor.b / 2);
+
+		const auto& holdShape = holdPiece->GetRotateShape()[0];
+
+		int minRow = 4, maxRow = -1;
+
+		for (int row = 0; row < 4; row++)
+		{
+			for (int col = 0; col < 4; col++)
+			{
+				if (holdShape[row][col] == 0)
+					continue;
+
+				if (row < minRow) 
+					minRow = row;
+
+				if (row > maxRow)
+					maxRow = row;
+			}
+		}
+
+		if (maxRow == -1)
+			return;
+
+
+		for (int row = minRow; row <= maxRow; row++)
+		{
+			for (int col = 0; col < 4; col++)
+			{
+				if (holdShape[row][col] == 0)
+					continue;
+
+				sf::RectangleShape block(sf::Vector2f(15, 15));
+				block.setFillColor(holdColor);
+				block.setPosition(sf::Vector2f(
+					holdingPieceUIBackground.getPosition().x + 10 + col * 17,
+					holdingPieceUIBackground.getPosition().y + 10 + (row - minRow) * 17
+				));
+
+				currentRenderPieces.push_back(std::make_shared<sf::RectangleShape>(block));
+			}
+		}
+	}
+
 	// 다음 조각 큐에서 다음 조각들의 종류를 가져옴
 	const std::deque<PieceType>& nextPieces = piecesQueue.GetNextPieces();
 
@@ -192,11 +267,9 @@ void Tetris::UpdatePieceUI()
 	}
 }
 
-bool Tetris::CreatePiece()
+bool Tetris::CreatePieceOfType(PieceType type)
 {
-	PieceType currentPieceType = piecesQueue.GetPiece();	// 현재 조각의 종류 가져오기
-
-	switch (currentPieceType)
+	switch (type)
 	{
 		case PieceType::I: currentPiece = std::make_shared<IPiece>(*this); break;
 		case PieceType::J: currentPiece = std::make_shared<JPiece>(*this); break;
@@ -205,19 +278,43 @@ bool Tetris::CreatePiece()
 		case PieceType::S: currentPiece = std::make_shared<SPiece>(*this); break;
 		case PieceType::T: currentPiece = std::make_shared<TPiece>(*this); break;
 		case PieceType::Z: currentPiece = std::make_shared<ZPiece>(*this); break;
-		default: break;
+		default: return false;
 	}
 
-	// 현재 조각이 배치할 수 있는지 확인
 	auto& rotationShape = currentPiece->GetRotateShape();
 	Position position = currentPiece->GetPosition();
 
 	if (currentPiece->IsCollision(rotationShape[0], position.x, position.y, false))
 		return false;
 
-	currentPiece->Initialize();	// 현재 조각 초기화
+	currentPiece->Initialize();
 
 	return true;
+}
+
+bool Tetris::CreatePiece()
+{
+	hasUsedHold = false;
+	return CreatePieceOfType(piecesQueue.GetPiece());
+}
+
+void Tetris::HoldPiece()
+{
+	if (hasUsedHold || currentPiece == nullptr)
+		return;
+
+	PieceType currentType = currentPiece->GetPieceType();
+	currentPiece->RemovePieceFromBoard();
+
+	PieceType toSpawn = holdPieceType;
+	holdPieceType = currentType;
+
+	bool success = (toSpawn == PieceType::None) ? CreatePiece() : CreatePieceOfType(toSpawn);
+
+	if (!success)
+		Initialize();
+
+	hasUsedHold = true;
 }
 
 void Tetris::RemoveLine()

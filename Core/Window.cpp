@@ -125,8 +125,8 @@ void Window::KeyBoardInput(float deltaTime)
 				break;
 
 			case VK_UP:
-				//currentPiece->Move(MoveDirection::Up);
-				printf("↑\n");
+				tetris.HoldPiece();
+				printf("Hold\n");
 				break;
 
 			case VK_DOWN:
@@ -138,9 +138,15 @@ void Window::KeyBoardInput(float deltaTime)
 				printf("Space\n");
 				break;
 
+			// 홀드
+			case 'C':
+				tetris.HoldPiece();
+				printf("Hold\n");
+				break;
+
             // 반시계 방향 회전
             case 'Z':
-                currentPiece->Rotate(false);	
+                currentPiece->Rotate(false);
                 printf("Z\n");
 				break;
 

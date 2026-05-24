@@ -273,6 +273,27 @@ void Piece::Place()
 		tetris.Initialize(); // 블록 생성을 할 수 없는 경우(게임 오버) 게임 초기화
 }
 
+void Piece::RemovePieceFromBoard()
+{
+	auto& rotateShape = GetRotateShape();
+	auto map = tetris.GetBoard();
+
+	for (int i = 0; i < 4; i++)
+	{
+		map_size newY = Tetris::maxHeight - (current.y + i + 1);
+
+		for (int j = 0; j < 4; j++)
+		{
+			map_size newX = current.x + j;
+
+			if (rotateShape[currentRotation][i][j] != 0)
+				map[newY][newX] = 0;
+		}
+	}
+
+	removeBlockTarget.clear();
+}
+
 void Piece::ShowGhost()
 {
 	auto& rotateShape = GetRotateShape();

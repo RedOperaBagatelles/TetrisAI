@@ -29,15 +29,15 @@ public:
     void Place();
 
 	void ShowGhost();                       // 고스트 조각을 표시하는 메소드
+	void RemovePieceFromBoard();			// 보드에서 조각을 제거하는 메소드 (홀드 전환 시 사용)
 
     Position GetPosition() const { return current; }
 
     virtual const low_uint(&GetRotateShape() const)[4][4][4] = 0;	// 조각의 회전 형태를 반환하는 순수 가상 메소드
+    virtual const PieceType GetPieceType() const = 0;               // 조각의 종류를 반환하는 순수 가상 메소드
 
 protected:
 	static int NormalizeRotation(low_uint value);
-
-	virtual const PieceType GetPieceType() const = 0;               // 조각의 종류를 반환하는 순수 가상 메소드
 
 	void Draw();                        // 조각을 그리는 순수 가상 메소드
 

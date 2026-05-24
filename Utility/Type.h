@@ -1,7 +1,12 @@
 #pragma once
 
-using map_size = char;
+#if _DEBUG
+using map_size = int;
+using low_uint = unsigned int;
+#else
+using map_size = __int8;
 using low_uint = unsigned char;
+#endif
 
 struct Position
 {
