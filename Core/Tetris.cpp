@@ -33,10 +33,9 @@ void Tetris::Initialize()
 	scoreText = std::make_shared<sf::Text>(font);
 	scoreText->setCharacterSize(16);
 	scoreText->setFillColor(sf::Color::White);
-	scoreText->setPosition({ (float)startX + 300, (float)startY + 445 });
-	UpdateScoreText();
 
 	Ready(50, 50);
+	UpdateScoreText();
 }
 
 void Tetris::Update(float deltaTime)
@@ -74,6 +73,10 @@ void Tetris::Ready(int x, int y)
 
 	holdPieceType = PieceType::None;
 	hasUsedHold = false;
+	score = 0;
+
+	if (scoreText != nullptr)
+		scoreText->setPosition({ (float)startX + 250, (float)startY + 395 });
 
 	currentRenderPieces.clear();
 
