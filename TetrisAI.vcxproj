@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Core\AI\AIInput.cpp" />
     <ClCompile Include="Core\InputSystem\KeyBoard.cpp" />
     <ClCompile Include="Core\Pieces.cpp" />
     <ClCompile Include="Core\PiecesQueue.cpp" />
@@ -155,6 +156,8 @@
     <ClCompile Include="Utility\Type.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Core\AI\AI.h" />
+    <ClInclude Include="Core\AI\AIInput.h" />
     <ClInclude Include="Core\GameLoop.h" />
     <ClInclude Include="Core\InputSystem\KeyBoard.h" />
     <ClInclude Include="Core\Pieces.h" />

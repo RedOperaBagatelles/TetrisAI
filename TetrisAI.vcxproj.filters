@@ -75,6 +75,9 @@
     <ClCompile Include="Core\InputSystem\KeyBoard.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Core\AI\AIInput.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\SFML\include\SFML\Window.hpp">
@@ -435,6 +438,12 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Core\InputSystem\KeyBoard.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\AI\AIInput.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\AI\AI.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
