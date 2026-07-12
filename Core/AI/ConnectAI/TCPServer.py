@@ -1,4 +1,5 @@
 import socket
+import json
 
 HOST = "127.0.0.1"
 PORT = 5000
@@ -16,16 +17,35 @@ print("Connected : ", addr)
 
 while True:
     # 클라이언트로부터 데이터 수신 (4096바이트까지 수신)
-    data = conn.recv(4096)
-    
+    try:
+        data = conn.recv(4096)
+        
+    except ConnectionResetError:
+        print("Connection closed by client.")
+        break
+
     if not data:
         break
         
     message = data.decode()
 
-    print("Recevie : ", message)
+    print("Receive : ", message)
 
-    conn.send("Hello, Client!".encode())
+    try:
+        req = json.loads(message)
+
+        if req.get("type") == "connection_check" and req.get("status") == "request":
+            res = {"type": "connection_check", "status": "response"}
+            
+            # C++ 구현부의 Json::ToString 출력 형태와 일치시키기 위해 공백 없이 직렬화
+            res_str = json.dumps(res, separators=(',', ':'))
+            conn.send(res_str.encode())
+        else:
+            conn.send(json.dumps({"error": "invalid_request"}).encode())
+
+    except json.JSONDecodeError:
+        print("Invalid JSON format")
+        conn.send(b'{"error": "invalid_json"}')
 
 conn.close()
 server.close()

@@ -154,6 +154,7 @@
     <ClCompile Include="Utility\Coroutine\WaitTime\WaitForSeconds.cpp" />
     <ClCompile Include="Utility\Coroutine\WaitTime\WaitTime.cpp" />
     <ClCompile Include="Utility\GameTimer.cpp" />
+    <ClCompile Include="Utility\Json.cpp" />
     <ClCompile Include="Utility\Type.h" />
   </ItemGroup>
   <ItemGroup>
@@ -280,6 +281,7 @@
     <ClInclude Include="Utility\Coroutine\WaitTime\WaitForSeconds.h" />
     <ClInclude Include="Utility\Coroutine\WaitTime\WaitTime.h" />
     <ClInclude Include="Utility\GameTimer.h" />
+    <ClInclude Include="Utility\Json.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Core\AI\ConnectAI\TCPServer.py" />

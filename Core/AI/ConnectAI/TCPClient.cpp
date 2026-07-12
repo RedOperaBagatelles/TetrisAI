@@ -1,4 +1,5 @@
 ﻿#include "TCPClient.h"
+#include "Utility/Json.h"
 
 #include <iostream>
 #include <string>
@@ -42,12 +43,12 @@ void TCPClient::Initialize()
 		}
 
 		// 서버와 연결이 되었는지 확인하는 데이터 전송
-		std::string_view message = GetCheckConnectMessage();
+		std::string message = GetCheckConnectMessage();
 		send(sock, message.data(), static_cast<int>(message.size()), 0);
 
 		// 서버로부터 응답 받음
 		std::string receivedMessage(1024, '\0');
-		int received = recv(sock, receivedMessage.data(), static_cast<int>(sizeof(receivedMessage)) - 1, 0);	// 반환 값 : 수신된 바이트 수
+		int received = recv(sock, receivedMessage.data(), static_cast<int>(receivedMessage.size()), 0);	// 반환 값 : 수신된 바이트 수
 
 		// 수신된 바이트 수가 0보다 크면 서버와 연결 성공, 그렇지 않으면 실패
 		if (received > 0)
@@ -62,9 +63,7 @@ void TCPClient::Initialize()
 			}
 
 			else
-			{
-				std::cerr << "Failed to verify connection. Retrying..." << std::endl;
-			}
+				std::cerr << "Failed to verify connection. Received: " << receivedMessage << " / Retrying..." << std::endl;
 		}
 
 		else
@@ -78,8 +77,17 @@ void TCPClient::Initialize()
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
 	}
+}
 
-	closesocket(sock);
+TCPClient::~TCPClient()
+{
+	if (sock != INVALID_SOCKET)
+	{
+		closesocket(sock);
+
+		sock = INVALID_SOCKET;
+	}
+
 	WSACleanup();
 }
 
@@ -88,9 +96,13 @@ bool TCPClient::IsConnected() const
 	return false;
 }
 
-std::string_view TCPClient::GetCheckConnectMessage() const
+std::string TCPClient::GetCheckConnectMessage() const
 {
-	return "Hello, Server!";
+	auto root = std::make_unique<Json>();
+	root->AddChild(std::make_unique<Json>("type", "connection_check"));
+	root->AddChild(std::make_unique<Json>("status", "request"));
+
+	return Json::ToString(root.get());
 }
 
 bool TCPClient::CheckConnect(std::string_view message) const
@@ -98,5 +110,11 @@ bool TCPClient::CheckConnect(std::string_view message) const
 	if (message.empty())
 		return false;
 
-	return message == "Hello, Client!";
+	auto expectedRoot = std::make_unique<Json>();
+	expectedRoot->AddChild(std::make_unique<Json>("type", "connection_check"));
+	expectedRoot->AddChild(std::make_unique<Json>("status", "response"));
+
+	std::string expectedStr = Json::ToString(expectedRoot.get());
+
+	return message == expectedStr;
 }
