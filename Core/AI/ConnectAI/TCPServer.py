@@ -24,8 +24,8 @@ while True:
     message = data.decode()
 
     print("Recevie : ", message)
-    
-    conn.send("Hello Client!".encode())
-    
+
+    conn.send("Hello, Client!".encode())
+
 conn.close()
 server.close()

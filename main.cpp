@@ -10,6 +10,7 @@ int main()
 	window.Initialize();
 
     TCPClient tcpClient;
+    tcpClient.Initialize();
 
     bool isSucceed = true;
 
