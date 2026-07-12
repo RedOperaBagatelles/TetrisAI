@@ -78,6 +78,9 @@
     <ClCompile Include="Core\AI\AIInput.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Core\AI\ConnectAI\TCPClient.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\SFML\include\SFML\Window.hpp">
@@ -446,6 +449,9 @@
     <ClInclude Include="Core\AI\AI.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Core\AI\ConnectAI\TCPClient.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="External\SFML\include\SFML\Audio\SoundFileFactory.inl">
@@ -487,5 +493,6 @@
     <None Include="External\SFML\include\SFML\Window\WindowBase.inl">
       <Filter>헤더 파일</Filter>
     </None>
+    <None Include="Core\AI\ConnectAI\TCPServer.py" />
   </ItemGroup>
 </Project>
