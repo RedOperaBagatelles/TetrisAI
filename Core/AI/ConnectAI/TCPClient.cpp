@@ -96,6 +96,20 @@ bool TCPClient::IsConnected() const
 	return false;
 }
 
+void TCPClient::SendMessage(const std::string& message) const
+{
+	if (sock == INVALID_SOCKET)
+	{
+		std::cerr << "Socket is not valid. Cannot send message.\n";
+		return;
+	}
+
+	int sent = send(sock, message.data(), static_cast<int>(message.size()), 0);
+
+	if (sent == SOCKET_ERROR)
+		std::cerr << "Failed to send message.\n";
+}
+
 std::string TCPClient::GetCheckConnectMessage() const
 {
 	auto root = std::make_unique<Json>();

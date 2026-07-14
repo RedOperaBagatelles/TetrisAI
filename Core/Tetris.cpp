@@ -372,3 +372,18 @@ void Tetris::AddRenderPieces(const std::vector<std::shared_ptr<const sf::Drawabl
 {
 	currentRenderPieces.insert(currentRenderPieces.end(), pieces.begin(), pieces.end());
 }
+
+std::shared_ptr<Piece> Tetris::GetCurrentPiece() const
+{
+	return currentPiece;
+}
+
+PieceType Tetris::GetHoldPieceType() const
+{
+	return holdPieceType;
+}
+
+const std::deque<PieceType>& Tetris::GetNextPieces() const
+{
+	return piecesQueue.GetNextPieces();
+}

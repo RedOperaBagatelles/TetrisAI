@@ -32,6 +32,7 @@ public:
 	void RemovePieceFromBoard();			// 보드에서 조각을 제거하는 메소드 (홀드 전환 시 사용)
 
     Position GetPosition() const { return current; }
+    low_uint GetRotation() const { return currentRotation; }
 
     virtual const low_uint(&GetRotateShape() const)[4][4][4] = 0;	// 조각의 회전 형태를 반환하는 순수 가상 메소드
     virtual const PieceType GetPieceType() const = 0;               // 조각의 종류를 반환하는 순수 가상 메소드

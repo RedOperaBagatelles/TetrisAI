@@ -9,8 +9,8 @@ int main()
 	Window window;
 	window.Initialize();
 
-    TCPClient tcpClient;
-    tcpClient.Initialize();
+    TCPClient server;
+    server.Initialize();
 
     bool isSucceed = true;
 

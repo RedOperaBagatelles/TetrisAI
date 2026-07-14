@@ -32,9 +32,9 @@ while True:
     print("Receive : ", message)
 
     try:
-        req = json.loads(message)
+        request = json.loads(message)
 
-        if req.get("type") == "connection_check" and req.get("status") == "request":
+        if request.get("type") == "connection_check" and request.get("status") == "request":
             res = {"type": "connection_check", "status": "response"}
             
             # C++ 구현부의 Json::ToString 출력 형태와 일치시키기 위해 공백 없이 직렬화

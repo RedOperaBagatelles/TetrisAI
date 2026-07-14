@@ -1,9 +1,12 @@
 ﻿#pragma once
 
+#include "Core/GameLoop.h"
 #include "Core/Tetris.h"
 #include "Core/AI/AIInput.h"
 
-class AI
+#include <string>
+
+class AI : public GameLoop
 {
 public:
 	AI() = default;
