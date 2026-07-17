@@ -1,5 +1,8 @@
 ﻿#include "TCPClient.h"
 #include "Utility/Json.h"
+#include "Core/Tetris.h"
+#include "Core/PiecesQueue.h"
+#include "Core/AI/AIOutput.h"
 
 #include <iostream>
 #include <string>
@@ -54,7 +57,7 @@ void TCPClient::Initialize()
 		if (received > 0)
 		{
 			// 수신된 바이트 수만큼 문자열 크기 조정
-			receivedMessage.resize(received);	
+			receivedMessage.resize(received);
 
 			if (CheckConnect(receivedMessage))
 			{
@@ -110,11 +113,32 @@ void TCPClient::SendMessage(const std::string& message) const
 		std::cerr << "Failed to send message.\n";
 }
 
+void TCPClient::SendMessage(const std::vector<uint8_t>& bytes) const
+{
+	if (sock == INVALID_SOCKET)
+	{
+		std::cerr << "Socket is not valid. Cannot send message.\n";
+		return;
+	}
+
+	int sent = send(sock, reinterpret_cast<const char*>(bytes.data()), static_cast<int>(bytes.size()), 0);
+
+	if (sent == SOCKET_ERROR)
+		std::cerr << "Failed to send game state message.\n";
+}
+
 std::string TCPClient::GetCheckConnectMessage() const
 {
 	auto root = std::make_unique<Json>();
 	root->AddChild(std::make_unique<Json>("type", "connection_check"));
 	root->AddChild(std::make_unique<Json>("status", "request"));
+
+	// GameState.py 와 동기화 검증을 위해 크기 정보를 함께 전송 (보드 크기, 큐 크기, 메시지 크기)
+	root->AddChild(std::make_unique<Json>("board_width", std::to_string(Tetris::width)));
+	root->AddChild(std::make_unique<Json>("board_height", std::to_string(Tetris::maxHeight)));
+	root->AddChild(std::make_unique<Json>("queue_size", std::to_string(PiecesQueue::queueSize)));
+	root->AddChild(std::make_unique<Json>("message_size", std::to_string(AIOutput::messageSize)));
+	root->AddChild(std::make_unique<Json>("piece_type_count", std::to_string(static_cast<unsigned int>(PieceType::Count))));
 
 	return Json::ToString(root.get());
 }

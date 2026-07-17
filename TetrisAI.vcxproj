@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Core\AI\AI.cpp" />
     <ClCompile Include="Core\AI\AIInput.cpp" />
     <ClCompile Include="Core\AI\AIOutput.cpp" />
     <ClCompile Include="Core\AI\ConnectAI\TCPClient.cpp" />
@@ -286,7 +287,9 @@
     <ClInclude Include="Utility\Json.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Core\AI\ConnectAI\TCPServer.py" />
+    <None Include="Core\AI\ConnectAI\Server\GameState.py" />
+    <None Include="Core\AI\ConnectAI\Server\Server.py" />
+    <None Include="Core\AI\ConnectAI\Server\TCPServer.py" />
     <None Include="External\SFML\include\SFML\Audio\SoundFileFactory.inl" />
     <None Include="External\SFML\include\SFML\Graphics\Color.inl" />
     <None Include="External\SFML\include\SFML\Graphics\Glsl.inl" />

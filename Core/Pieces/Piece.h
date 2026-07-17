@@ -7,9 +7,9 @@
 
 class Tetris;
 
-enum class PieceType { None, I, J, L, O, S, T, Z, Ghost };		// 테트리스 조각의 종류를 나타내는 열거형
-enum class PieceRotationType { Spawn, Right, Reverse, Left };	// 테트리스 조각의 회전 상태를 나타내는 열거형
-enum class MoveDirection { None, Left, Right, Down };           // 조각의 이동 방향을 나타내는 열거형
+enum class PieceType { None, I, J, L, O, S, T, Z, Ghost, Count };	// 테트리스 조각의 종류를 나타내는 열거형
+enum class PieceRotationType { Spawn, Right, Reverse, Left };		// 테트리스 조각의 회전 상태를 나타내는 열거형
+enum class MoveDirection { None, Left, Right, Down };				// 조각의 이동 방향을 나타내는 열거형
 
 class Piece : public GameLoop
 {
