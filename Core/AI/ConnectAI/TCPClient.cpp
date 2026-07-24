@@ -96,7 +96,7 @@ TCPClient::~TCPClient()
 
 bool TCPClient::IsConnected() const
 {
-	return false;
+	return isConnected;
 }
 
 void TCPClient::SendMessage(const std::string& message) const
