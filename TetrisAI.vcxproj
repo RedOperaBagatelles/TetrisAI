@@ -288,6 +288,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Core\AI\ConnectAI\Server\GameState.py" />
+    <None Include="Core\AI\ConnectAI\Server\GameVisualizer.py" />
     <None Include="Core\AI\ConnectAI\Server\Server.py" />
     <None Include="Core\AI\ConnectAI\Server\TCPServer.py" />
     <None Include="External\SFML\include\SFML\Audio\SoundFileFactory.inl" />

@@ -130,15 +130,15 @@ void TCPClient::SendMessage(const std::vector<uint8_t>& bytes) const
 std::string TCPClient::GetCheckConnectMessage() const
 {
 	auto root = std::make_unique<Json>();
-	root->AddChild(std::make_unique<Json>("type", "connection_check"));
-	root->AddChild(std::make_unique<Json>("status", "request"));
+	root->AddChild(std::make_unique<Json>("Type", "ConnectionCheck"));
+	root->AddChild(std::make_unique<Json>("Status", "Request"));
 
 	// GameState.py 와 동기화 검증을 위해 크기 정보를 함께 전송 (보드 크기, 큐 크기, 메시지 크기)
-	root->AddChild(std::make_unique<Json>("board_width", std::to_string(Tetris::width)));
-	root->AddChild(std::make_unique<Json>("board_height", std::to_string(Tetris::maxHeight)));
-	root->AddChild(std::make_unique<Json>("queue_size", std::to_string(PiecesQueue::queueSize)));
-	root->AddChild(std::make_unique<Json>("message_size", std::to_string(AIOutput::messageSize)));
-	root->AddChild(std::make_unique<Json>("piece_type_count", std::to_string(static_cast<unsigned int>(PieceType::Count))));
+	root->AddChild(std::make_unique<Json>("BoardWidth", std::to_string(Tetris::width)));
+	root->AddChild(std::make_unique<Json>("BoardHeight", std::to_string(Tetris::maxHeight)));
+	root->AddChild(std::make_unique<Json>("QueueSize", std::to_string(PiecesQueue::queueSize)));
+	root->AddChild(std::make_unique<Json>("MessageSize", std::to_string(AIOutput::messageSize)));
+	root->AddChild(std::make_unique<Json>("PieceTypeCount", std::to_string(static_cast<unsigned int>(PieceType::Count))));
 
 	return Json::ToString(root.get());
 }
@@ -149,8 +149,8 @@ bool TCPClient::CheckConnect(std::string_view message) const
 		return false;
 
 	auto expectedRoot = std::make_unique<Json>();
-	expectedRoot->AddChild(std::make_unique<Json>("type", "connection_check"));
-	expectedRoot->AddChild(std::make_unique<Json>("status", "response"));
+	expectedRoot->AddChild(std::make_unique<Json>("Type", "ConnectionCheck"));
+	expectedRoot->AddChild(std::make_unique<Json>("Status", "Response"));
 
 	std::string expectedStr = Json::ToString(expectedRoot.get());
 

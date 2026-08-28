@@ -6,64 +6,69 @@ from GameState import GameState, PieceType
 from GameVisualizer import GameVisualizer
 
 
-def server_loop(data_queue: Queue):
+def ServerLoop(dataQueue: Queue):
     """서버 메인 루프 (별도 스레드에서 실행)"""
 
     while True:
         try:
             server = TCPServer()
-            server.start()
-            server.accept()
+            server.Start()
+            server.Accept()
 
             while True:
-                kind, message = server.recv_message()
+                messageType, message = server.ReceiveMessage()
 
-                if kind is None:
+                if messageType is None:
                     break
 
-                if kind == "game_state":
-                    state = GameState.from_bytes(message)
-                    data_queue.put((state, message))
+                # 현재 받은 MessageType이 게임 상태인 경우
+                if messageType == "game_state":
+                    state = GameState.FromBytes(message)
+                    dataQueue.put((state, message))
                     continue
 
                 try:
                     request = json.loads(message)
 
-                    if (request.get("type") == "connection_check" and request.get("status") == "request"):
-                        board_width = int(request.get("board_width", GameState.BOARD_WIDTH))
-                        board_height = int(request.get("board_height", GameState.BOARD_HEIGHT))
-                        queue_size = int(request.get("queue_size", GameState.QUEUE_SIZE))
-                        piece_type_count = request.get("piece_type_count")
-                        client_message_size = request.get("message_size")
+                    # 처음 클라이언트와 연결시 보드 정보를 가져오기 위한 요청 처리
+                    if (request.get("Type") == "ConnectionCheck" and request.get("Status") == "Request"):
+                        boardWidth = int(request.get("BoardWidth", GameState.BOARD_WIDTH))
+                        boardHeight = int(request.get("BoardHeight", GameState.BOARD_HEIGHT))
+                        queueSize = int(request.get("QueueSize", GameState.NEXT_PIECE_QUEUE_SIZE))
+                        pieceTypeCount = request.get("PieceTypeCount")
+                        messageSize = request.get("MessageSize")
 
-                        GameState.configure(board_width, board_height, queue_size, int(piece_type_count) if piece_type_count is not None else None,)
+                        # 클라이언트로 부터 받은 보드 크기, 큐 크기, 메시지 크기 정보로 GameState 클래스 설정 갱신
+                        GameState.Configure(boardWidth, boardHeight, queueSize, int(pieceTypeCount) if pieceTypeCount is not None else None,)
 
-                        if client_message_size is not None and int(client_message_size) != GameState.MESSAGE_SIZE:
-                            print(f"[WARN] message_size mismatch! client={client_message_size}, server={GameState.MESSAGE_SIZE}")
+                        # 서버 내부적으로 설정한 메시지 크기와 클라이언트로부터 가져온 메시지 크기가 다르면 경고 로그 출력
+                        if messageSize is not None and int(messageSize) != GameState.MESSAGE_SIZE:
+                            print(f"[WARN] 클라이언트로부터 가져온 메시지 크기 불일치! 클라이언트={messageSize}, 서버={GameState.MESSAGE_SIZE}")
 
-                        response = {"type": "connection_check", "status": "response"}
-                        server.send(json.dumps(response, separators=(',', ':')))
+                        # 클라이언트에게 connection_check 응답 전송
+                        response = {"Type": "ConnectionCheck", "Status": "Response"}
+                        server.Send(json.dumps(response, separators=(',', ':')))
 
                     else:
-                        server.send(json.dumps({"error": "invalid_request"}))
+                        server.Send(json.dumps({"Error": "InvalidRequest"}))
 
                 except json.JSONDecodeError:
-                    server.send('{"error":"invalid_json"}')
+                    server.Send('{"Error":"InvalidJson"}')
 
         except Exception as e:
             print(f"[ERROR] Server exception: {e}")
 
         finally:
             try:
-                server.close()
+                server.Close()
             except Exception:
                 pass
 
 
-data_queue = Queue()
+dataQueue = Queue()
 
-server_thread = Thread(target=server_loop, args=(data_queue,), daemon=True)
-server_thread.start()
+serverThread = Thread(target=ServerLoop, args=(dataQueue,), daemon=True)
+serverThread.start()
 
-visualizer = GameVisualizer(data_queue)
-visualizer.run()
+visualizer = GameVisualizer(dataQueue)
+visualizer.Run()

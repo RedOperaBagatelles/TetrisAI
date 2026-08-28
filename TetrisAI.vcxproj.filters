@@ -87,6 +87,9 @@
     <ClCompile Include="Core\AI\AIOutput.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Core\AI\AI.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\SFML\include\SFML\Window.hpp">
@@ -505,6 +508,9 @@
     <None Include="External\SFML\include\SFML\Window\WindowBase.inl">
       <Filter>헤더 파일</Filter>
     </None>
-    <None Include="Core\AI\ConnectAI\TCPServer.py" />
+    <None Include="Core\AI\ConnectAI\Server\GameState.py" />
+    <None Include="Core\AI\ConnectAI\Server\Server.py" />
+    <None Include="Core\AI\ConnectAI\Server\TCPServer.py" />
+    <None Include="Core\AI\ConnectAI\Server\GameVisualizer.py" />
   </ItemGroup>
 </Project>
