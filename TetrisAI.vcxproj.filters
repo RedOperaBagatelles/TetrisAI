@@ -75,6 +75,21 @@
     <ClCompile Include="Core\InputSystem\KeyBoard.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Core\AI\AIInput.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\AI\ConnectAI\TCPClient.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Json.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\AI\AIOutput.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\AI\AI.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\SFML\include\SFML\Window.hpp">
@@ -437,6 +452,21 @@
     <ClInclude Include="Core\InputSystem\KeyBoard.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Core\AI\AIInput.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\AI\AI.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\AI\ConnectAI\TCPClient.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Json.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\AI\AIOutput.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="External\SFML\include\SFML\Audio\SoundFileFactory.inl">
@@ -478,5 +508,9 @@
     <None Include="External\SFML\include\SFML\Window\WindowBase.inl">
       <Filter>헤더 파일</Filter>
     </None>
+    <None Include="Core\AI\ConnectAI\Server\GameState.py" />
+    <None Include="Core\AI\ConnectAI\Server\Server.py" />
+    <None Include="Core\AI\ConnectAI\Server\TCPServer.py" />
+    <None Include="Core\AI\ConnectAI\Server\GameVisualizer.py" />
   </ItemGroup>
 </Project>

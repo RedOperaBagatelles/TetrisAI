@@ -5,6 +5,7 @@
 #include "SFML/Graphics.hpp"
 #include "Utility/Type.h"
 
+#include <deque>
 #include <vector>
 #include <memory>
 
@@ -37,7 +38,9 @@ public:
 	map_size GetStartX() const { return startX; }		// 게임 보드의 시작 X 좌표를 반환하는 메소드
 	map_size GetStartY() const { return startY; }		// 게임 보드의 시작 Y 좌표를 반환하는 메소드
 
-	std::shared_ptr<Piece> GetCurrentPiece() const { return currentPiece; }
+	std::shared_ptr<Piece> GetCurrentPiece() const;
+	PieceType GetHoldPieceType() const;					// 현재 홀드 중인 조각의 종류를 반환하는 메소드
+	const std::deque<PieceType>& GetNextPieces() const;	// 대기 중인 모든 조각의 종류를 반환하는 메소드
 
 private:
 	std::vector<std::shared_ptr<const sf::Drawable>> currentRenderPieces;

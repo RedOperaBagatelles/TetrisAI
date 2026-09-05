@@ -3,7 +3,6 @@
 #include "IEnumerator.h"
 
 #include <vector>
-#include <memory>
 
 class CoroutineManager
 {
