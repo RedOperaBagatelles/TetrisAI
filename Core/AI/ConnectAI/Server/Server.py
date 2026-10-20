@@ -3,6 +3,7 @@ from queue import Queue
 from threading import Thread
 from TCPServer import TCPServer
 from GameState import GameState, PieceType
+from PossiblePlacements import PossiblePlacements
 from GameVisualizer import GameVisualizer
 
 
@@ -25,6 +26,18 @@ def ServerLoop(dataQueue: Queue):
                 if messageType == "game_state":
                     state = GameState.FromBytes(message)
                     dataQueue.put((state, message))
+                    continue
+
+                # 현재 받은 MessageType이 가능한 배치 목록인 경우 콘솔에 출력
+                if messageType == "possible_placements":
+                    placements = PossiblePlacements.FromBytes(message)
+
+                    print(f"[Placements] 현재 조각 ({placements.x}, {placements.y}) rotation={placements.rotation} | 가능한 배치 {len(placements.placements)}개")
+
+                    for placement in placements.placements:
+                        actions = ", ".join(action.name for action in placement.actions)
+                        print(f"  - ({placement.x}, {placement.y}) rotation={placement.rotation} : [{actions}]")
+
                     continue
 
                 try:

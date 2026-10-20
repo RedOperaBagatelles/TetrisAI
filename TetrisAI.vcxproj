@@ -136,6 +136,7 @@
     <ClCompile Include="Core\AI\AI.cpp" />
     <ClCompile Include="Core\AI\AIInput.cpp" />
     <ClCompile Include="Core\AI\AIOutput.cpp" />
+    <ClCompile Include="Core\AI\ConnectAI\PiecePlacementSender.cpp" />
     <ClCompile Include="Core\AI\ConnectAI\TCPClient.cpp" />
     <ClCompile Include="Core\AI\Control\PiecePlacementExplorer.cpp" />
     <ClCompile Include="Core\InputSystem\KeyBoard.cpp" />
@@ -164,6 +165,7 @@
     <ClInclude Include="Core\AI\AI.h" />
     <ClInclude Include="Core\AI\AIInput.h" />
     <ClInclude Include="Core\AI\AIOutput.h" />
+    <ClInclude Include="Core\AI\ConnectAI\PiecePlacementSender.h" />
     <ClInclude Include="Core\AI\ConnectAI\TCPClient.h" />
     <ClInclude Include="Core\AI\Control\PiecePlacementExplorer.h" />
     <ClInclude Include="Core\GameLoop.h" />
@@ -291,6 +293,7 @@
   <ItemGroup>
     <None Include="Core\AI\ConnectAI\Server\GameState.py" />
     <None Include="Core\AI\ConnectAI\Server\GameVisualizer.py" />
+    <None Include="Core\AI\ConnectAI\Server\PossiblePlacements.py" />
     <None Include="Core\AI\ConnectAI\Server\Server.py" />
     <None Include="Core\AI\ConnectAI\Server\TCPServer.py" />
     <None Include="External\SFML\include\SFML\Audio\SoundFileFactory.inl" />

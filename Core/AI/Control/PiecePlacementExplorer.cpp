@@ -24,6 +24,9 @@ std::vector<PiecePlacement> PiecePlacementExplorer::GetAllPossiblePlacements(Tet
 	std::queue<int> next;
 	std::unordered_set<StateKey, StateKeyHash> visited;
 
+	// 같은 위치와 회전 상태의 결과는 최단 경로만 남기기 위한 집합 (BFS이므로 먼저 수집된 순서가 최단)
+	std::unordered_set<int> placePositionList;
+
 	std::shared_ptr<Piece> currentPiece = tetris.GetCurrentPiece();
 
 	// 탐색을 위한 초기 상태 설정
@@ -52,7 +55,13 @@ std::vector<PiecePlacement> PiecePlacementExplorer::GetAllPossiblePlacements(Tet
 		// 하드 드랍으로 조각이 고정된 상태는 더 이상 탐색하지 않고 결과로만 수집
 		if (current.isPlaced)
 		{
-			results.push_back({ current.position, current.rotation, BuildActions(nodes, currentIndex) });
+			// 같은 (위치, 회전) 결과가 이미 수집되었으면 건너뜀
+			const int placeKey = ((static_cast<int>(current.position.y) * Tetris::width + static_cast<int>(current.position.x)) * 4 + static_cast<int>(current.rotation));
+
+			// 값을 삽입했을 때 true가 반환되면 처음 수집된 결과이므로 results에 추가
+			if (placePositionList.insert(placeKey).second)
+				results.push_back({ current.position, current.rotation, BuildActions(nodes, currentIndex) });
+
 			continue;
 		}
 

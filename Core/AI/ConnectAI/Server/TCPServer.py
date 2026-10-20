@@ -1,5 +1,6 @@
 ﻿import socket
 from GameState import GameState
+from PossiblePlacements import PossiblePlacements
 
 class TCPServer:
     def __init__(self, host="127.0.0.1", port=5000, backlog=1):
@@ -73,6 +74,15 @@ class TCPServer:
 
             return "game_state", header + body
 
+        # 첫 바이트가 PossiblePlacements.MESSAGE_TYPE이면 가변 크기 배치 메시지로 보고 전체를 수신
+        if header[0] == PossiblePlacements.MESSAGE_TYPE:
+            message = self.ReceivePossiblePlacements(header)
+
+            if message is None:
+                return None, None
+
+            return "possible_placements", message
+
         # 그 외에는 기존과 동일하게 텍스트(JSON) 메시지로 보고 나머지를 한 번에 수신
         try:
             rest = self.connectSocket.recv(self.maxReceiveSize)
@@ -89,6 +99,42 @@ class TCPServer:
         except UnicodeDecodeError:
             print("[ERROR] 텍스트 메시지 디코딩에 실패했습니다.")
             return None, None
+
+    # 배치 메시지는 가변 길이이므로 헤더 → 배치 개수 → 각 배치(액션 개수 → 액션들) 순으로 단계적으로 수신하는 메소드
+    def ReceivePossiblePlacements(self, header):
+        # 헤더의 나머지 부분 : 현재 조각(x, y, rotation) + 배치 개수(2)
+        body = self.ReceiveDataFromClient(PossiblePlacements.HEADER_SIZE - 1)
+
+        # 빈 데이터는 연결 종료를 의미
+        if body is None:
+            return None
+
+        message = bytearray(header + body)
+
+        # 배치 개수 (리틀엔디안 2바이트, 헤더의 마지막 2바이트)
+        placementCount = int.from_bytes(message[-2:], 'little')
+
+        for _ in range(placementCount):
+            # 배치 헤더 : 위치(x, y, rotation) + 액션 개수(2)
+            placementHeader = self.ReceiveDataFromClient(PossiblePlacements.PLACEMENT_SIZE)
+
+            if placementHeader is None:
+                return None
+
+            message.extend(placementHeader)
+
+            # 액션 개수 (리틀엔디안 2바이트, 배치 헤더의 마지막 2바이트)
+            actionCount = int.from_bytes(placementHeader[-2:], 'little')
+
+            # 액션 시퀀스 수신
+            actions = self.ReceiveDataFromClient(actionCount)
+
+            if actions is None:
+                return None
+
+            message.extend(actions)
+
+        return bytes(message)
 
     # 클라이언트에게 문자열 전송 메소드
     def Send(self, message):

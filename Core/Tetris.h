@@ -2,6 +2,7 @@
 
 #include "Core/GameLoop.h"
 #include "Core/PiecesQueue.h"
+#include "Core/AI/Control/PiecePlacementExplorer.h"
 #include "SFML/Graphics.hpp"
 #include "Utility/Type.h"
 
@@ -43,6 +44,8 @@ public:
 	const std::deque<PieceType>& GetNextPieces() const;		// 대기 중인 모든 조각의 종류를 반환하는 메소드
 	const bool HasUsedHold() const { return hasUsedHold; }	// 해당 턴에 홀드를 사용했는지 여부를 반환하는 메소드
 
+	const std::vector<PiecePlacement>& GetPossiblePlacements() const { return possiblePlacements; }	// 현재 조각으로 둘 수 있는 모든 경우의 수를 반환하는 메소드
+
 private:
 	std::vector<std::shared_ptr<const sf::Drawable>> currentRenderPieces;
 	sf::Font font;
@@ -58,8 +61,13 @@ private:
 
 	int score = 0;
 
-	PieceType holdPieceType = PieceType::None;	// 현재 hold한 조각의 종류
-	bool hasUsedHold = false;					// 해당 턴에 홀드를 사용했는지 여부 (홀드는 한 턴에 한 번만 사용할 수 있음)
+	PieceType holdPieceType = PieceType::None;		// 현재 hold한 조각의 종류
+	bool hasUsedHold = false;						// 해당 턴에 홀드를 사용했는지 여부 (홀드는 한 턴에 한 번만 사용할 수 있음)
+
+	std::vector<PiecePlacement> possiblePlacements;	// 현재 조각으로 둘 수 있는 모든 경우의 수
 
 	bool CreatePieceWithType(PieceType type);
+
+	// 현재 생성된 조각의 상태를 보고 둘 수 있는 모든 경우의 수를 갱신하는 메소드
+	void UpdatePossiblePlacements();
 };

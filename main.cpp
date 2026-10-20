@@ -3,6 +3,7 @@
 #include "Utility/GameTimer.h"
 
 #include "Core/AI/ConnectAI/TCPClient.h"
+#include "Core/AI/ConnectAI/PiecePlacementSender.h"
 #include "Core/AI/AIOutput.h"
 
 int main()
@@ -11,6 +12,9 @@ int main()
 	window.Initialize();
 
     TCPClient::GetInstance().Initialize();
+
+	// 게임 초기화 중 연결 전에 계산되어 전송하지 못한 가능한 배치 목록 전송
+	PiecePlacementSender::Flush();
 
     AIOutput aiOutput(window.GetTetris());
 
