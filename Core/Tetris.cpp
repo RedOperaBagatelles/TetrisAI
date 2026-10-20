@@ -270,7 +270,7 @@ void Tetris::UpdatePieceUI()
 	}
 }
 
-bool Tetris::CreatePieceOfType(PieceType type)
+bool Tetris::CreatePieceWithType(PieceType type)
 {
 	switch (type)
 	{
@@ -298,7 +298,7 @@ bool Tetris::CreatePieceOfType(PieceType type)
 bool Tetris::CreatePiece()
 {
 	hasUsedHold = false;
-	return CreatePieceOfType(piecesQueue.GetPiece());
+	return CreatePieceWithType(piecesQueue.GetPiece());
 }
 
 void Tetris::HoldPiece()
@@ -312,7 +312,7 @@ void Tetris::HoldPiece()
 	PieceType toSpawn = holdPieceType;
 	holdPieceType = currentType;
 
-	bool success = (toSpawn == PieceType::None) ? CreatePiece() : CreatePieceOfType(toSpawn);
+	bool success = (toSpawn == PieceType::None) ? CreatePiece() : CreatePieceWithType(toSpawn);
 
 	if (!success)
 		Initialize();

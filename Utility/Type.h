@@ -13,6 +13,11 @@ struct Position
     constexpr Position(int x, int y) : x(x), y(y) { }
     constexpr Position() : x(0), y(0) { }
 
+    bool operator==(const Position& other) const
+    {
+        return (x == other.x) && (y == other.y);
+    }
+
     map_size x;
     map_size y;
 };

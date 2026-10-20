@@ -39,8 +39,9 @@ public:
 	map_size GetStartY() const { return startY; }		// 게임 보드의 시작 Y 좌표를 반환하는 메소드
 
 	std::shared_ptr<Piece> GetCurrentPiece() const;
-	PieceType GetHoldPieceType() const;					// 현재 홀드 중인 조각의 종류를 반환하는 메소드
-	const std::deque<PieceType>& GetNextPieces() const;	// 대기 중인 모든 조각의 종류를 반환하는 메소드
+	PieceType GetHoldPieceType() const;						// 현재 홀드 중인 조각의 종류를 반환하는 메소드
+	const std::deque<PieceType>& GetNextPieces() const;		// 대기 중인 모든 조각의 종류를 반환하는 메소드
+	const bool HasUsedHold() const { return hasUsedHold; }	// 해당 턴에 홀드를 사용했는지 여부를 반환하는 메소드
 
 private:
 	std::vector<std::shared_ptr<const sf::Drawable>> currentRenderPieces;
@@ -60,5 +61,5 @@ private:
 	PieceType holdPieceType = PieceType::None;	// 현재 hold한 조각의 종류
 	bool hasUsedHold = false;					// 해당 턴에 홀드를 사용했는지 여부 (홀드는 한 턴에 한 번만 사용할 수 있음)
 
-	bool CreatePieceOfType(PieceType type);
+	bool CreatePieceWithType(PieceType type);
 };
