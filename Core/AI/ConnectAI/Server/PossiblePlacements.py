@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 from enum import IntEnum
 from typing import List
 
@@ -51,9 +51,9 @@ class PossiblePlacements:
 
         offset = 1
 
-        # 현재 조각의 위치와 회전 상태 파싱
-        x = data[offset]
-        y = data[offset + 1]
+        # 현재 조각의 위치와 회전 상태 파싱 (x, y는 부호 있는 8비트 정수)
+        x = int.from_bytes(data[offset:offset + 1], 'little', signed=True)
+        y = int.from_bytes(data[offset + 1:offset + 2], 'little', signed=True)
         rotation = data[offset + 2]
         offset += 3
 
@@ -67,9 +67,9 @@ class PossiblePlacements:
             if offset + thisClass.PLACEMENT_SIZE > len(data):
                 raise ValueError(f"배치 데이터가 끊겼습니다 : {len(data)}바이트, offset={offset}")
 
-            # 배치의 위치와 회전 상태, 액션 개수 파싱
-            placementX = data[offset]
-            placementY = data[offset + 1]
+            # 배치의 위치와 회전 상태, 액션 개수 파싱 (x, y는 부호 있는 8비트 정수)
+            placementX = int.from_bytes(data[offset:offset + 1], 'little', signed=True)
+            placementY = int.from_bytes(data[offset + 1:offset + 2], 'little', signed=True)
             placementRotation = data[offset + 2]
             actionCount = int.from_bytes(data[offset + 3:offset + 5], 'little')
             offset += 5

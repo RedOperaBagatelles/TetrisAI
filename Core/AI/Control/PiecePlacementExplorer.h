@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Core/AI/AIInput.h"
 #include "Core/Pieces/Piece.h"
