@@ -38,6 +38,13 @@ def ServerLoop(dataQueue: Queue):
                         actions = ", ".join(action.name for action in placement.actions)
                         print(f"  - ({placement.x}, {placement.y}) rotation={placement.rotation} : [{actions}]")
 
+                    # 가능한 배치를 수신하면 0번 인덱스를 선택하여 클라이언트에 응답
+                    try:
+                        server.SelectPathIndex(10)
+                        
+                    except Exception as e:
+                        print(f"[ERROR] SelectPathIndex(0) failed: {e}")
+
                     continue
 
                 try:
@@ -61,6 +68,17 @@ def ServerLoop(dataQueue: Queue):
                         # 클라이언트에게 connection_check 응답 전송
                         response = {"Type": "ConnectionCheck", "Status": "Response"}
                         server.Send(json.dumps(response, separators=(',', ':')))
+
+                    elif request.get("Type") == "SelectPathIndex":
+                        # 서버에서 경로 인덱스를 선택하여 클라이언트에 응답 (클라이언트는 응답을 대기하지 않음)
+                        index = request.get("Index", request.get("index"))
+                        
+                        if index is None and request.get("PathIndex") is not None:
+                            index = request.get("PathIndex")
+                            
+                        server.SelectPathIndex(index)
+                        
+                        continue
 
                     else:
                         server.Send(json.dumps({"Error": "InvalidRequest"}))

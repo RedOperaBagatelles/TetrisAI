@@ -7,6 +7,8 @@
 #include <string_view>
 #include <vector>
 #include <winsock2.h>
+#include <thread>
+#include <atomic>
 
 #undef SendMessage
 
@@ -22,13 +24,21 @@ public:
 	void SendMessage(const std::string& message) const;			// 서버로 텍스트(JSON) 메시지를 전송하는 메소드
 	void SendMessage(const std::vector<uint8_t>& bytes) const;	// 서버로 바이너리(게임 상태) 메시지를 전송하는 메소드
 
+	void StartReceiveThread();									// 서버로부터 메시지 수신 스레드 시작
+	void StopReceiveThread();									// 서버로부터 메시지 수신 스레드 중지
+
 private:
 	std::string GetCheckConnectMessage() const;			// 서버와 연결되었는지 확인하는 메시지를 반환하는 메소드
 	bool CheckConnect(std::string_view message) const;	// 서버와 연결되었는지 확인하는 메소드
+
+	void ReceiveLoop();										// 수신 루프
 
 	SOCKET sock = INVALID_SOCKET;
 
 	std::string_view ipAddress = "127.0.0.1";
 	int port = 5000;
 	bool isConnected = false;
+
+	std::thread receiveThread;
+	std::atomic<bool> isReceiving{ false };
 };

@@ -8,6 +8,8 @@
 #include <string>
 #include <thread>
 #include <chrono>
+#include <vector>
+#include <sstream>
 
 #pragma comment(lib, "ws2_32.lib")
 #pragma warning(disable:4996)
@@ -80,10 +82,14 @@ void TCPClient::Initialize()
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
 	}
+
+	StartReceiveThread();
 }
 
 TCPClient::~TCPClient()
 {
+	StopReceiveThread();
+
 	if (sock != INVALID_SOCKET)
 	{
 		closesocket(sock);
@@ -155,4 +161,121 @@ bool TCPClient::CheckConnect(std::string_view message) const
 	std::string expectedStr = Json::ToString(expectedRoot.get());
 
 	return message == expectedStr;
+}
+
+void TCPClient::StartReceiveThread()
+{
+	// 이미 수신 스레드가 실행 중이면 종료
+	if (isReceiving)
+		return;
+
+	isReceiving = true;
+	receiveThread = std::thread(&TCPClient::ReceiveLoop, this);
+}
+
+void TCPClient::StopReceiveThread()
+{
+	// 이미 수신 스레드가 중지되었거나 소켓이 유효하지 않으면 종료
+	if (!isReceiving)
+		return;
+
+	isReceiving = false;
+
+	if (sock != INVALID_SOCKET)
+		shutdown(sock, SD_BOTH);
+
+	// 수신 스레드가 종료될 때까지 대기
+	if (receiveThread.joinable())
+		receiveThread.join();
+}
+
+void TCPClient::ReceiveLoop()
+{
+	while (isReceiving && sock != INVALID_SOCKET)
+	{
+		char buffer[4096];
+		int received = recv(sock, buffer, static_cast<int>(sizeof(buffer) - 1), 0);
+
+		if (received <= 0)
+		{
+			if (isReceiving)
+				std::cerr << "Connection lost or failed to receive from server.\n";
+			break;
+		}
+
+		buffer[received] = '\0';
+		std::string message(buffer, received);
+
+		// 서버로부터 수신한 응답을 콘솔에 출력
+		std::cout << "[Server Response] " << message << std::endl;
+
+		// SelectPathIndex 응답 처리
+		if (message.find("\"Type\":\"SelectPathIndex\"") != std::string::npos || message.find("\"Type\": \"SelectPathIndex\"") != std::string::npos)
+		{
+			try
+			{
+				// 간단한 파싱으로 필요한 정보 추출
+				size_t statusPos = message.find("\"Status\"");
+				if (statusPos == std::string::npos)
+					continue;
+
+				size_t colonPos = message.find(':', statusPos);
+				if (colonPos == std::string::npos)
+					continue;
+
+				size_t quote1 = message.find('"', colonPos + 1);
+				if (quote1 == std::string::npos)
+					continue;
+				size_t quote2 = message.find('"', quote1 + 1);
+				if (quote2 == std::string::npos)
+					continue;
+				std::string status = message.substr(quote1 + 1, quote2 - quote1 - 1);
+
+				if (status == "Response")
+				{
+					// Index 추출
+					auto ExtractInt = [&](const std::string& key) -> int {
+						size_t keyPos = message.find("\"" + key + "\"");
+						if (keyPos == std::string::npos) return -1;
+						size_t c = message.find(':', keyPos);
+						if (c == std::string::npos) return -1;
+						size_t numStart = message.find_first_of("-0123456789", c);
+						if (numStart == std::string::npos) return -1;
+						size_t numEnd = message.find_first_not_of("-0123456789", numStart);
+						std::string numStr = (numEnd == std::string::npos) ? message.substr(numStart) : message.substr(numStart, numEnd - numStart);
+						try { return std::stoi(numStr); } catch (...) { return -1; }
+					};
+
+					int index = ExtractInt("Index");
+					int x = ExtractInt("X");
+					int y = ExtractInt("Y");
+					int rotation = ExtractInt("Rotation");
+					int actionCount = ExtractInt("ActionCount");
+
+					std::cout << "[Selected Path] Index=" << index << " (X=" << x << ", Y=" << y << ", Rotation=" << rotation << ") | Actions=" << actionCount << std::endl;
+
+					// Actions 배열 추출
+					size_t actionsPos = message.find("\"Actions\"");
+					if (actionsPos != std::string::npos)
+					{
+						size_t arrStart = message.find('[', actionsPos);
+						size_t arrEnd = message.find(']', actionsPos);
+						if (arrStart != std::string::npos && arrEnd != std::string::npos && arrEnd > arrStart)
+						{
+							std::string actionsStr = message.substr(arrStart + 1, arrEnd - arrStart - 1);
+							std::cout << "[Selected Path] ActionSequence: " << actionsStr << std::endl;
+						}
+					}
+				}
+				else if (status == "Error")
+				{
+					std::cout << "[Selected Path] Error response received." << std::endl;
+				}
+			}
+			catch (...)
+			{
+				// 파싱 실패시 무시
+			}
+		}
+	}
 }

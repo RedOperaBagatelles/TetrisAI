@@ -1,6 +1,8 @@
 ﻿import socket
+import json
 from GameState import GameState
 from PossiblePlacements import PossiblePlacements
+
 
 class TCPServer:
     def __init__(self, host="127.0.0.1", port=5000, backlog=1):
@@ -11,6 +13,7 @@ class TCPServer:
         self.server = None          # 서버 소켓
         self.connectSocket = None   # 클라이언트와 통신할 소켓
         self.address = None         # 연결된 클라이언트 주소
+        self.lastPlacements = None  # 가장 최근에 수신한 가능한 배치 목록
 
     # 서버 소켓 생성 및 연결 대기 시작 메소드
     def Start(self):
@@ -134,13 +137,79 @@ class TCPServer:
 
             message.extend(actions)
 
+        try:
+            self.lastPlacements = PossiblePlacements.FromBytes(bytes(message))
+            
+        except Exception as e:
+            print(f"[WARN] Failed to parse placements: {e}")
+            self.lastPlacements = None
+
         return bytes(message)
 
     # 클라이언트에게 문자열 전송 메소드
     def Send(self, message):
-        # 연결된 클라이언트가 있을 경우
-        if self.connectSocket is not None:
+        if self.connectSocket is None:
+            print("[WARN] 클라이언트가 연결되지 않았습니다. 메시지를 전송할 수 없습니다.")
+            return
+        
+        if isinstance(message, str):
             self.connectSocket.send(message.encode())    # 문자열을 bytes로 변환하여 전송
+        elif isinstance(message, bytes):
+            self.connectSocket.send(message)
+        elif isinstance(message, bytearray):
+            self.connectSocket.send(bytes(message))
+        else:
+            self.connectSocket.send(str(message).encode())
+
+    # 바이트 데이터를 클라이언트에 전송하는 메소드
+    def SendBytes(self, data):
+        if self.connectSocket is None:
+            print("[WARN] 클라이언트가 연결되지 않았습니다. 데이터를 전송할 수 없습니다.")
+            return
+
+        if isinstance(data, (bytes, bytearray)):
+            self.connectSocket.send(bytes(data))
+        else:
+            self.connectSocket.send(data)
+
+    # 서버에서 선택한 경로 인덱스를 클라이언트에 응답
+    def SelectPathIndex(self, index):
+        try:
+            idx = int(index)
+            
+        # 인덱스가 정수가 아닌 경우
+        except Exception:
+            response = {"Type": "SelectPathIndex", "Status": "Error", "Message": "InvalidIndex"}
+            self.Send(json.dumps(response, separators=(',', ':')))
+            return
+
+        # 마지막 배치 목록이 없거나 placements 속성이 없는 경우
+        if self.lastPlacements is None or not hasattr(self.lastPlacements, 'placements'):
+            response = {"Type": "SelectPathIndex", "Status": "Error", "Message": "NoPlacements"}
+            self.Send(json.dumps(response, separators=(',', ':')))
+            return
+
+        # 인덱스가 범위를 벗어난 경우
+        if idx < 0 or idx >= len(self.lastPlacements.placements):
+            response = {"Type": "SelectPathIndex", "Status": "Error", "Message": "IndexOutOfRange"}
+            self.Send(json.dumps(response, separators=(',', ':')))
+            return
+
+        # 선택된 배치 가져오기
+        selected = self.lastPlacements.placements[idx]
+
+        response = {
+            "Type": "SelectPathIndex",
+            "Status": "Response",
+            "Index": idx,
+            "X": selected.x,
+            "Y": selected.y,
+            "Rotation": selected.rotation,
+            "ActionCount": len(selected.actions),
+            "Actions": [action.name for action in selected.actions]
+        }
+
+        self.Send(json.dumps(response, separators=(',', ':')))
 
     # 클라이언트 및 서버 소켓 종료 메소드
     def Close(self):
