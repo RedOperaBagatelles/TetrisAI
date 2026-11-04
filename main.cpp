@@ -11,9 +11,10 @@ int main()
 	Window window;
 	window.Initialize();
 
+    TCPClient::GetInstance().SetTetris(&window.GetTetris());
     TCPClient::GetInstance().Initialize();
 
-	// 게임 초기화 중 연결 전에 계산되어 전송하지 못한 가능한 배치 목록 전송
+	// 연결 초기화 후 보관된 메시지가 있으면 전송
 	PiecePlacementSender::Flush();
 
     AIOutput aiOutput(window.GetTetris());

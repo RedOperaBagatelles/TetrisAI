@@ -6,7 +6,6 @@ from GameState import GameState, PieceType
 from PossiblePlacements import PossiblePlacements
 from GameVisualizer import GameVisualizer
 
-
 def ServerLoop(dataQueue: Queue):
     """서버 메인 루프 (별도 스레드에서 실행)"""
 
@@ -38,12 +37,13 @@ def ServerLoop(dataQueue: Queue):
                         actions = ", ".join(action.name for action in placement.actions)
                         print(f"  - ({placement.x}, {placement.y}) rotation={placement.rotation} : [{actions}]")
 
-                    # 가능한 배치를 수신하면 0번 인덱스를 선택하여 클라이언트에 응답
-                    try:
-                        server.SelectPathIndex(10)
-                        
-                    except Exception as e:
-                        print(f"[ERROR] SelectPathIndex(0) failed: {e}")
+                    # 가능한 배치를 수신하면 0번 인덱스를 선택하여 클라이언트에 응답 (한 번만 전송)
+                    if not getattr(server, 'pathIndexSent', False):
+                        try:
+                            server.SelectPathIndex(20)
+                            server.pathIndexSent = True
+                        except Exception as e:
+                            print(f"[ERROR] SelectPathIndex(0) failed: {e}")
 
                     continue
 

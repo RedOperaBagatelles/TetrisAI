@@ -3,6 +3,7 @@
 #include "Core/Tetris.h"
 #include "Core/PiecesQueue.h"
 #include "Core/AI/AIOutput.h"
+#include "Core/AI/AIInput.h"
 
 #include <iostream>
 #include <string>
@@ -10,6 +11,8 @@
 #include <chrono>
 #include <vector>
 #include <sstream>
+#include <algorithm>
+#include <memory>
 
 #pragma comment(lib, "ws2_32.lib")
 #pragma warning(disable:4996)
@@ -19,6 +22,14 @@ TCPClient& TCPClient::GetInstance()
 	static TCPClient instance;
 
 	return instance;
+}
+
+void TCPClient::SetTetris(Tetris* tetrisPtr)
+{
+	tetris = tetrisPtr;
+
+	if (tetris && !aiInput)
+		aiInput = std::make_unique<AIInput>(*tetris);
 }
 
 void TCPClient::Initialize()
@@ -206,9 +217,6 @@ void TCPClient::ReceiveLoop()
 		buffer[received] = '\0';
 		std::string message(buffer, received);
 
-		// 서버로부터 수신한 응답을 콘솔에 출력
-		std::cout << "[Server Response] " << message << std::endl;
-
 		// SelectPathIndex 응답 처리
 		if (message.find("\"Type\":\"SelectPathIndex\"") != std::string::npos || message.find("\"Type\": \"SelectPathIndex\"") != std::string::npos)
 		{
@@ -216,66 +224,103 @@ void TCPClient::ReceiveLoop()
 			{
 				// 간단한 파싱으로 필요한 정보 추출
 				size_t statusPos = message.find("\"Status\"");
+
 				if (statusPos == std::string::npos)
 					continue;
 
 				size_t colonPos = message.find(':', statusPos);
+
 				if (colonPos == std::string::npos)
 					continue;
 
 				size_t quote1 = message.find('"', colonPos + 1);
+
 				if (quote1 == std::string::npos)
 					continue;
+
 				size_t quote2 = message.find('"', quote1 + 1);
+
 				if (quote2 == std::string::npos)
 					continue;
+
 				std::string status = message.substr(quote1 + 1, quote2 - quote1 - 1);
 
 				if (status == "Response")
 				{
-					// Index 추출
-					auto ExtractInt = [&](const std::string& key) -> int {
-						size_t keyPos = message.find("\"" + key + "\"");
-						if (keyPos == std::string::npos) return -1;
-						size_t c = message.find(':', keyPos);
-						if (c == std::string::npos) return -1;
-						size_t numStart = message.find_first_of("-0123456789", c);
-						if (numStart == std::string::npos) return -1;
-						size_t numEnd = message.find_first_not_of("-0123456789", numStart);
-						std::string numStr = (numEnd == std::string::npos) ? message.substr(numStart) : message.substr(numStart, numEnd - numStart);
-						try { return std::stoi(numStr); } catch (...) { return -1; }
-					};
-
-					int index = ExtractInt("Index");
-					int x = ExtractInt("X");
-					int y = ExtractInt("Y");
-					int rotation = ExtractInt("Rotation");
-					int actionCount = ExtractInt("ActionCount");
-
-					std::cout << "[Selected Path] Index=" << index << " (X=" << x << ", Y=" << y << ", Rotation=" << rotation << ") | Actions=" << actionCount << std::endl;
-
 					// Actions 배열 추출
 					size_t actionsPos = message.find("\"Actions\"");
+
 					if (actionsPos != std::string::npos)
 					{
 						size_t arrStart = message.find('[', actionsPos);
 						size_t arrEnd = message.find(']', actionsPos);
+
 						if (arrStart != std::string::npos && arrEnd != std::string::npos && arrEnd > arrStart)
 						{
 							std::string actionsStr = message.substr(arrStart + 1, arrEnd - arrStart - 1);
-							std::cout << "[Selected Path] ActionSequence: " << actionsStr << std::endl;
+							std::vector<std::string> actionNames;
+							std::string current;
+
+							bool inQuotes = false;
+
+							for (char c : actionsStr)
+							{
+								if (c == '"')
+								{
+									inQuotes = !inQuotes;
+
+									if (!inQuotes && !current.empty())
+									{
+										actionNames.push_back(current);
+										current.clear();
+									}
+
+									else if (inQuotes)
+										current.clear();
+
+									continue;
+								}
+
+								if (inQuotes)
+									current += c;
+							}
+
+							if (!actionNames.empty())
+								ExecuteActions(actionNames);
 						}
 					}
 				}
-				else if (status == "Error")
-				{
-					std::cout << "[Selected Path] Error response received." << std::endl;
-				}
 			}
+
 			catch (...)
 			{
 				// 파싱 실패시 무시
 			}
+
+			continue;
 		}
+	}
+}
+
+void TCPClient::ExecuteActions(const std::vector<std::string>& actionNames)
+{
+	if (!aiInput)
+	{
+		if (tetris)
+			aiInput = std::make_unique<AIInput>(*tetris);
+		else
+			return;
+	}
+
+	for (const auto& name : actionNames)
+	{
+		if (name == "MOVE_LEFT")					aiInput->Action(AIAction::MoveLeft);
+		else if (name == "MOVE_RIGHT")				aiInput->Action(AIAction::MoveRight);
+		else if (name == "MOVE_DOWN")				aiInput->Action(AIAction::MoveDown);
+		else if (name == "ROTATE_CLOCKWISE")		aiInput->Action(AIAction::RotateClockwise);
+		else if (name == "ROTATE_COUNTERCLOCKWISE")	aiInput->Action(AIAction::RotateCounterClockwise);
+		else if (name == "HARD_DROP")				aiInput->Action(AIAction::HardDrop);
+		else if (name == "HOLDING")					aiInput->Action(AIAction::Holding);
+		else if (name == "NONE")					aiInput->Action(AIAction::None);
 	}
 }

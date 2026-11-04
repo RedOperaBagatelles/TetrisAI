@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Core/GameLoop.h"
+#include "Core/AI/AIInput.h"
 
 #include <cstdint>
 #include <string>
@@ -9,8 +10,11 @@
 #include <winsock2.h>
 #include <thread>
 #include <atomic>
+#include <memory>
 
 #undef SendMessage
+
+class Tetris;
 
 class TCPClient : public GameLoop
 {
@@ -27,11 +31,14 @@ public:
 	void StartReceiveThread();									// 서버로부터 메시지 수신 스레드 시작
 	void StopReceiveThread();									// 서버로부터 메시지 수신 스레드 중지
 
+	void SetTetris(Tetris* tetrisPtr);							// Tetris 객체 설정
+
 private:
 	std::string GetCheckConnectMessage() const;			// 서버와 연결되었는지 확인하는 메시지를 반환하는 메소드
 	bool CheckConnect(std::string_view message) const;	// 서버와 연결되었는지 확인하는 메소드
 
 	void ReceiveLoop();										// 수신 루프
+	void ExecuteActions(const std::vector<std::string>& actionNames);
 
 	SOCKET sock = INVALID_SOCKET;
 
@@ -41,4 +48,7 @@ private:
 
 	std::thread receiveThread;
 	std::atomic<bool> isReceiving{ false };
+
+	Tetris* tetris = nullptr;
+	std::unique_ptr<AIInput> aiInput;
 };
