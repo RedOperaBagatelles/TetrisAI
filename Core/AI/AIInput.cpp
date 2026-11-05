@@ -41,7 +41,7 @@ void AIInput::Action(AIAction action)
 			currentPiece->HardDrop();
 			break;
 
-		// AIAction::Holding은 현재 조각을 홀드하는 동작이므로, currentPiece를 사용하지 않고 Tetris 객체의 HoldPiece() 메서드를 호출합니다.
+		// AIAction::Holding은 현재 조각을 홀드하는 동작이므로, currentPiece를 사용하지 않고 Tetris 객체의 HoldPiece() 메서드를 호출
 		case AIAction::Holding:
 			tetris.HoldPiece();
 			break;

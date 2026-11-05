@@ -16,6 +16,12 @@ std::vector<uint8_t> PiecePlacementSender::pendingMessage;
 // 05 13 01 03 00 02 04 06	배치2 : x = 5, y = 19(0x13), rot = 1, 액션개수 = 3, [MoveRight, RotateCW, HardDrop]
 void PiecePlacementSender::Send(const Tetris& tetris, const std::vector<PiecePlacement>& placements)
 {
+	TCPClient& client = TCPClient::GetInstance();
+
+	// 서버가 선택한 액션 시퀀스를 실행하는 동안에는 전송하지 않음
+	if (client.IsExecutingActions())
+		return;
+
 	std::shared_ptr<Piece> currentPiece = tetris.GetCurrentPiece();
 
 	// 조각이 없는 상태라면 보관 중인 메시지도 유효하지 않으므로 제거
@@ -56,8 +62,6 @@ void PiecePlacementSender::Send(const Tetris& tetris, const std::vector<PiecePla
 		for (AIAction action : placement.actions)
 			bytes.push_back(static_cast<uint8_t>(action));
 	}
-
-	TCPClient& client = TCPClient::GetInstance();
 
 	// 서버 연결 전이면 마지막 메시지를 보관해 두었다가 연결 성공 후 Flush()에서 전송
 	if (!client.IsConnected())

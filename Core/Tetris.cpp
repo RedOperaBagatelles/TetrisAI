@@ -12,6 +12,7 @@
 
 #include "Pieces/Piece.h"
 
+#include "AI/ConnectAI/GameStateSender.h"
 #include "AI/ConnectAI/PiecePlacementSender.h"
 
 #include <SFML/Graphics/Text.hpp>
@@ -294,6 +295,9 @@ bool Tetris::CreatePieceWithType(PieceType type)
 
 	currentPiece->Initialize();
 
+	// 조각이 생성된 시점에만 현재 보드 상태를 서버로 전송
+	GameStateSender::Send(*this);
+
 	return true;
 }
 
@@ -345,6 +349,15 @@ void Tetris::UpdatePossiblePlacements()
 	possiblePlacements = PiecePlacementExplorer::GetAllPossiblePlacements(*this);
 
 	// 현재 조각의 상태와 가능한 배치 목록을 서버로 전송
+	PiecePlacementSender::Send(*this, possiblePlacements);
+}
+
+void Tetris::SendStateAndPlacements()
+{
+	if (currentPiece == nullptr)
+		return;
+
+	GameStateSender::Send(*this);
 	PiecePlacementSender::Send(*this, possiblePlacements);
 }
 

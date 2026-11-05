@@ -312,6 +312,9 @@ void TCPClient::ExecuteActions(const std::vector<std::string>& actionNames)
 			return;
 	}
 
+	// 액션 시퀀스를 실행하는 동안에는 조각 생성 시점의 상태 전송을 보류
+	isExecutingActions = true;
+
 	for (const auto& name : actionNames)
 	{
 		if (name == "MOVE_LEFT")					aiInput->Action(AIAction::MoveLeft);
@@ -323,4 +326,10 @@ void TCPClient::ExecuteActions(const std::vector<std::string>& actionNames)
 		else if (name == "HOLDING")					aiInput->Action(AIAction::Holding);
 		else if (name == "NONE")					aiInput->Action(AIAction::None);
 	}
+
+	isExecutingActions = false;
+
+	// 배치가 모두 완료된 후 현재 보드 상태와 다음 조각의 가능한 배치를 서버로 전송
+	if (tetris)
+		tetris->SendStateAndPlacements();
 }

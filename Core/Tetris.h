@@ -46,6 +46,9 @@ public:
 
 	const std::vector<PiecePlacement>& GetPossiblePlacements() const { return possiblePlacements; }	// 현재 조각으로 둘 수 있는 모든 경우의 수를 반환하는 메소드
 
+	// 현재 보드 상태와 현재 조각의 가능한 배치를 서버로 전송하는 메소드
+	void SendStateAndPlacements();
+
 private:
 	std::vector<std::shared_ptr<const sf::Drawable>> currentRenderPieces;
 	sf::Font font;

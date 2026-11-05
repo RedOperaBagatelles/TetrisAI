@@ -136,6 +136,7 @@
     <ClCompile Include="Core\AI\AI.cpp" />
     <ClCompile Include="Core\AI\AIInput.cpp" />
     <ClCompile Include="Core\AI\AIOutput.cpp" />
+    <ClCompile Include="Core\AI\ConnectAI\GameStateSender.cpp" />
     <ClCompile Include="Core\AI\ConnectAI\PiecePlacementSender.cpp" />
     <ClCompile Include="Core\AI\ConnectAI\TCPClient.cpp" />
     <ClCompile Include="Core\AI\Control\PiecePlacementExplorer.cpp" />
@@ -165,6 +166,7 @@
     <ClInclude Include="Core\AI\AI.h" />
     <ClInclude Include="Core\AI\AIInput.h" />
     <ClInclude Include="Core\AI\AIOutput.h" />
+    <ClInclude Include="Core\AI\ConnectAI\GameStateSender.h" />
     <ClInclude Include="Core\AI\ConnectAI\PiecePlacementSender.h" />
     <ClInclude Include="Core\AI\ConnectAI\TCPClient.h" />
     <ClInclude Include="Core\AI\Control\PiecePlacementExplorer.h" />

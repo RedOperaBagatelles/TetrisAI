@@ -31,6 +31,8 @@ public:
 	void StartReceiveThread();									// 서버로부터 메시지 수신 스레드 시작
 	void StopReceiveThread();									// 서버로부터 메시지 수신 스레드 중지
 
+	bool IsExecutingActions() const { return isExecutingActions; }	// 서버가 선택한 액션 시퀀스를 실행 중인지 반환
+
 	void SetTetris(Tetris* tetrisPtr);							// Tetris 객체 설정
 
 private:
@@ -48,6 +50,7 @@ private:
 
 	std::thread receiveThread;
 	std::atomic<bool> isReceiving{ false };
+	std::atomic<bool> isExecutingActions{ false };
 
 	Tetris* tetris = nullptr;
 	std::unique_ptr<AIInput> aiInput;

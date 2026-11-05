@@ -15,6 +15,9 @@ def ServerLoop(dataQueue: Queue):
             server.Start()
             server.Accept()
 
+            # 테스트용: 연결 후 첫 번째 조각만 서버가 즉시 배치하도록 한 번만 선택
+            server.selectionPending = True
+
             while True:
                 messageType, message = server.ReceiveMessage()
 
@@ -24,7 +27,7 @@ def ServerLoop(dataQueue: Queue):
                 # 현재 받은 MessageType이 게임 상태인 경우
                 if messageType == "game_state":
                     state = GameState.FromBytes(message)
-                    dataQueue.put((state, message))
+                    dataQueue.put({"kind": "state", "state": state, "rawBytes": message})
                     continue
 
                 # 현재 받은 MessageType이 가능한 배치 목록인 경우 콘솔에 출력
@@ -37,13 +40,23 @@ def ServerLoop(dataQueue: Queue):
                         actions = ", ".join(action.name for action in placement.actions)
                         print(f"  - ({placement.x}, {placement.y}) rotation={placement.rotation} : [{actions}]")
 
-                    # 가능한 배치를 수신하면 0번 인덱스를 선택하여 클라이언트에 응답 (한 번만 전송)
-                    if not getattr(server, 'pathIndexSent', False):
+                    # 테스트용: 연결 후 첫 조각의 배치 목록에서만 한 번 선택
+                    if getattr(server, 'selectionPending', False) and placements.placements:
+                        index = min(20, len(placements.placements) - 1)
+                        selected = placements.placements[index]
+
+                        # 선택한 배치 정보를 시각화 큐로 전달 (보드 변화는 클라이언트가 배치 후 보내는 상태로 갱신)
+                        dataQueue.put({
+                            "kind": "selection",
+                            "placement": selected,
+                            "index": index,
+                        })
+
                         try:
-                            server.SelectPathIndex(20)
-                            server.pathIndexSent = True
+                            server.SelectPathIndex(index)
+                            server.selectionPending = False
                         except Exception as e:
-                            print(f"[ERROR] SelectPathIndex(0) failed: {e}")
+                            print(f"[ERROR] SelectPathIndex({index}) failed: {e}")
 
                     continue
 
