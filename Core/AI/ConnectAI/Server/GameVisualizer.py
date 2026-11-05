@@ -32,13 +32,13 @@ class GameVisualizer:
         self.boardWidth = GameState.BOARD_WIDTH
         self.boardHeight = GameState.BOARD_HEIGHT
 
+        self.info_x = BOARD_X + self.boardWidth * CELL_SIZE + 30
+
         canvasWidth = BOARD_X * 2 + self.boardWidth * CELL_SIZE + 340
         canvasHeight = BOARD_Y + self.boardHeight * CELL_SIZE + 60
         
         self.canvas = tk.Canvas(self.root, width=canvasWidth, height=canvasHeight, bg="#1e1e1e", highlightthickness=0, )
         self.canvas.pack(padx=5, pady=5)
-
-        self.info_x = BOARD_X + self.boardWidth * CELL_SIZE + 30
 
         self.DrawBoardBorder()
         self.InitBoardCells()
@@ -111,6 +111,10 @@ class GameVisualizer:
         self.val_next = MakeValue(y)
         y += 30
 
+        MakeLabel("Selected : ", y)
+        self.val_selection = MakeValue(y)
+        y += 30
+
         self.canvas.create_text(x, y, text="Raw Bytes (hex):", fill="#aaaaaa", font=mono, anchor="nw")
         y += 20
 
@@ -173,12 +177,24 @@ class GameVisualizer:
             else:
                 self.canvas.itemconfig(t, text="")
 
+    def UpdateSelection(self, placement, index):
+        actions = ", ".join(action.name for action in placement.actions)
+        self.canvas.itemconfig(
+            self.val_selection,
+            text=f"#{index} ({placement.x}, {placement.y}) rot={placement.rotation} [{actions}]",
+        )
+
     def PollQueue(self):
         try:
             while True:
-                state, rawBytes = self.dataQueue.get_nowait()
-                self.UpdateData(state, rawBytes)
-                
+                message = self.dataQueue.get_nowait()
+
+                if message.get("kind") == "state":
+                    self.UpdateData(message["state"], message["rawBytes"])
+
+                elif message.get("kind") == "selection":
+                    self.UpdateSelection(message["placement"], message.get("index"))
+
         except Exception:
             pass
         

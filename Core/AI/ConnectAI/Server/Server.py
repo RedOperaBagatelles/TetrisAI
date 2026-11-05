@@ -3,8 +3,8 @@ from queue import Queue
 from threading import Thread
 from TCPServer import TCPServer
 from GameState import GameState, PieceType
+from PossiblePlacements import PossiblePlacements
 from GameVisualizer import GameVisualizer
-
 
 def ServerLoop(dataQueue: Queue):
     """서버 메인 루프 (별도 스레드에서 실행)"""
@@ -15,6 +15,9 @@ def ServerLoop(dataQueue: Queue):
             server.Start()
             server.Accept()
 
+            # 테스트용: 연결 후 첫 번째 조각만 서버가 즉시 배치하도록 한 번만 선택
+            server.selectionPending = True
+
             while True:
                 messageType, message = server.ReceiveMessage()
 
@@ -24,7 +27,37 @@ def ServerLoop(dataQueue: Queue):
                 # 현재 받은 MessageType이 게임 상태인 경우
                 if messageType == "game_state":
                     state = GameState.FromBytes(message)
-                    dataQueue.put((state, message))
+                    dataQueue.put({"kind": "state", "state": state, "rawBytes": message})
+                    continue
+
+                # 현재 받은 MessageType이 가능한 배치 목록인 경우 콘솔에 출력
+                if messageType == "possible_placements":
+                    placements = PossiblePlacements.FromBytes(message)
+
+                    print(f"[Placements] 현재 조각 ({placements.x}, {placements.y}) rotation={placements.rotation} | 가능한 배치 {len(placements.placements)}개")
+
+                    for placement in placements.placements:
+                        actions = ", ".join(action.name for action in placement.actions)
+                        print(f"  - ({placement.x}, {placement.y}) rotation={placement.rotation} : [{actions}]")
+
+                    # 테스트용: 연결 후 첫 조각의 배치 목록에서만 한 번 선택
+                    if getattr(server, 'selectionPending', False) and placements.placements:
+                        index = min(20, len(placements.placements) - 1)
+                        selected = placements.placements[index]
+
+                        # 선택한 배치 정보를 시각화 큐로 전달 (보드 변화는 클라이언트가 배치 후 보내는 상태로 갱신)
+                        dataQueue.put({
+                            "kind": "selection",
+                            "placement": selected,
+                            "index": index,
+                        })
+
+                        try:
+                            server.SelectPathIndex(index)
+                            server.selectionPending = False
+                        except Exception as e:
+                            print(f"[ERROR] SelectPathIndex({index}) failed: {e}")
+
                     continue
 
                 try:
@@ -48,6 +81,17 @@ def ServerLoop(dataQueue: Queue):
                         # 클라이언트에게 connection_check 응답 전송
                         response = {"Type": "ConnectionCheck", "Status": "Response"}
                         server.Send(json.dumps(response, separators=(',', ':')))
+
+                    elif request.get("Type") == "SelectPathIndex":
+                        # 서버에서 경로 인덱스를 선택하여 클라이언트에 응답 (클라이언트는 응답을 대기하지 않음)
+                        index = request.get("Index", request.get("index"))
+                        
+                        if index is None and request.get("PathIndex") is not None:
+                            index = request.get("PathIndex")
+                            
+                        server.SelectPathIndex(index)
+                        
+                        continue
 
                     else:
                         server.Send(json.dumps({"Error": "InvalidRequest"}))

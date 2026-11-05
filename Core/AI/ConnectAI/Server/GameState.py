@@ -76,8 +76,13 @@ class GameState:
             board.append(list(data[offset:offset + thisClass.BOARD_WIDTH]))
             offset += thisClass.BOARD_WIDTH
 
-        # 현재 조각의 종류 정보 파싱
-        currentPiece = PieceState(type=PieceType(data[offset]), rotation=data[offset + 1], x=data[offset + 2], y=data[offset + 3], )
+        # 현재 조각의 종류 정보 파싱 (x, y는 부호 있는 8비트 정수)
+        currentPiece = PieceState(
+            type=PieceType(data[offset]),
+            rotation=data[offset + 1],
+            x=int.from_bytes(data[offset + 2:offset + 3], 'little', signed=True),
+            y=int.from_bytes(data[offset + 3:offset + 4], 'little', signed=True),
+        )
         offset += 4
 
         # 홀드 조각의 종류 정보 파싱

@@ -1,5 +1,8 @@
 ﻿import socket
+import json
 from GameState import GameState
+from PossiblePlacements import PossiblePlacements
+
 
 class TCPServer:
     def __init__(self, host="127.0.0.1", port=5000, backlog=1):
@@ -10,6 +13,7 @@ class TCPServer:
         self.server = None          # 서버 소켓
         self.connectSocket = None   # 클라이언트와 통신할 소켓
         self.address = None         # 연결된 클라이언트 주소
+        self.lastPlacements = None  # 가장 최근에 수신한 가능한 배치 목록
 
     # 서버 소켓 생성 및 연결 대기 시작 메소드
     def Start(self):
@@ -73,6 +77,15 @@ class TCPServer:
 
             return "game_state", header + body
 
+        # 첫 바이트가 PossiblePlacements.MESSAGE_TYPE이면 가변 크기 배치 메시지로 보고 전체를 수신
+        if header[0] == PossiblePlacements.MESSAGE_TYPE:
+            message = self.ReceivePossiblePlacements(header)
+
+            if message is None:
+                return None, None
+
+            return "possible_placements", message
+
         # 그 외에는 기존과 동일하게 텍스트(JSON) 메시지로 보고 나머지를 한 번에 수신
         try:
             rest = self.connectSocket.recv(self.maxReceiveSize)
@@ -90,11 +103,113 @@ class TCPServer:
             print("[ERROR] 텍스트 메시지 디코딩에 실패했습니다.")
             return None, None
 
+    # 배치 메시지는 가변 길이이므로 헤더 → 배치 개수 → 각 배치(액션 개수 → 액션들) 순으로 단계적으로 수신하는 메소드
+    def ReceivePossiblePlacements(self, header):
+        # 헤더의 나머지 부분 : 현재 조각(x, y, rotation) + 배치 개수(2)
+        body = self.ReceiveDataFromClient(PossiblePlacements.HEADER_SIZE - 1)
+
+        # 빈 데이터는 연결 종료를 의미
+        if body is None:
+            return None
+
+        message = bytearray(header + body)
+
+        # 배치 개수 (리틀엔디안 2바이트, 헤더의 마지막 2바이트)
+        placementCount = int.from_bytes(message[-2:], 'little')
+
+        for _ in range(placementCount):
+            # 배치 헤더 : 위치(x, y, rotation) + 액션 개수(2)
+            placementHeader = self.ReceiveDataFromClient(PossiblePlacements.PLACEMENT_SIZE)
+
+            if placementHeader is None:
+                return None
+
+            message.extend(placementHeader)
+
+            # 액션 개수 (리틀엔디안 2바이트, 배치 헤더의 마지막 2바이트)
+            actionCount = int.from_bytes(placementHeader[-2:], 'little')
+
+            # 액션 시퀀스 수신
+            actions = self.ReceiveDataFromClient(actionCount)
+
+            if actions is None:
+                return None
+
+            message.extend(actions)
+
+        try:
+            self.lastPlacements = PossiblePlacements.FromBytes(bytes(message))
+            
+        except Exception as e:
+            print(f"[WARN] Failed to parse placements: {e}")
+            self.lastPlacements = None
+
+        return bytes(message)
+
     # 클라이언트에게 문자열 전송 메소드
     def Send(self, message):
-        # 연결된 클라이언트가 있을 경우
-        if self.connectSocket is not None:
+        if self.connectSocket is None:
+            print("[WARN] 클라이언트가 연결되지 않았습니다. 메시지를 전송할 수 없습니다.")
+            return
+        
+        if isinstance(message, str):
             self.connectSocket.send(message.encode())    # 문자열을 bytes로 변환하여 전송
+        elif isinstance(message, bytes):
+            self.connectSocket.send(message)
+        elif isinstance(message, bytearray):
+            self.connectSocket.send(bytes(message))
+        else:
+            self.connectSocket.send(str(message).encode())
+
+    # 바이트 데이터를 클라이언트에 전송하는 메소드
+    def SendBytes(self, data):
+        if self.connectSocket is None:
+            print("[WARN] 클라이언트가 연결되지 않았습니다. 데이터를 전송할 수 없습니다.")
+            return
+
+        if isinstance(data, (bytes, bytearray)):
+            self.connectSocket.send(bytes(data))
+        else:
+            self.connectSocket.send(data)
+
+    # 서버에서 선택한 경로 인덱스를 클라이언트에 응답
+    def SelectPathIndex(self, index):
+        try:
+            idx = int(index)
+            
+        # 인덱스가 정수가 아닌 경우
+        except Exception:
+            response = {"Type": "SelectPathIndex", "Status": "Error", "Message": "InvalidIndex"}
+            self.Send(json.dumps(response, separators=(',', ':')))
+            return
+
+        # 마지막 배치 목록이 없거나 placements 속성이 없는 경우
+        if self.lastPlacements is None or not hasattr(self.lastPlacements, 'placements'):
+            response = {"Type": "SelectPathIndex", "Status": "Error", "Message": "NoPlacements"}
+            self.Send(json.dumps(response, separators=(',', ':')))
+            return
+
+        # 인덱스가 범위를 벗어난 경우
+        if idx < 0 or idx >= len(self.lastPlacements.placements):
+            response = {"Type": "SelectPathIndex", "Status": "Error", "Message": "IndexOutOfRange"}
+            self.Send(json.dumps(response, separators=(',', ':')))
+            return
+
+        # 선택된 배치 가져오기
+        selected = self.lastPlacements.placements[idx]
+
+        response = {
+            "Type": "SelectPathIndex",
+            "Status": "Response",
+            "Index": idx,
+            "X": selected.x,
+            "Y": selected.y,
+            "Rotation": selected.rotation,
+            "ActionCount": len(selected.actions),
+            "Actions": [action.name for action in selected.actions]
+        }
+
+        self.Send(json.dumps(response, separators=(',', ':')))
 
     # 클라이언트 및 서버 소켓 종료 메소드
     def Close(self):

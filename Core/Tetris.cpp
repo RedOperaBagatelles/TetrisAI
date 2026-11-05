@@ -12,6 +12,9 @@
 
 #include "Pieces/Piece.h"
 
+#include "AI/ConnectAI/GameStateSender.h"
+#include "AI/ConnectAI/PiecePlacementSender.h"
+
 #include <SFML/Graphics/Text.hpp>
 
 #include <deque>
@@ -270,7 +273,7 @@ void Tetris::UpdatePieceUI()
 	}
 }
 
-bool Tetris::CreatePieceOfType(PieceType type)
+bool Tetris::CreatePieceWithType(PieceType type)
 {
 	switch (type)
 	{
@@ -292,13 +295,23 @@ bool Tetris::CreatePieceOfType(PieceType type)
 
 	currentPiece->Initialize();
 
+	// 조각이 생성된 시점에만 현재 보드 상태를 서버로 전송
+	GameStateSender::Send(*this);
+
 	return true;
 }
 
 bool Tetris::CreatePiece()
 {
 	hasUsedHold = false;
-	return CreatePieceOfType(piecesQueue.GetPiece());
+
+	// 다음 조각 큐에서 다음 조각의 종류를 가져와 해당 조각을 생성
+	if (!CreatePieceWithType(piecesQueue.GetPiece()))
+		return false;
+
+	UpdatePossiblePlacements();
+
+	return true;
 }
 
 void Tetris::HoldPiece()
@@ -312,12 +325,40 @@ void Tetris::HoldPiece()
 	PieceType toSpawn = holdPieceType;
 	holdPieceType = currentType;
 
-	bool success = (toSpawn == PieceType::None) ? CreatePiece() : CreatePieceOfType(toSpawn);
+	bool success = (toSpawn == PieceType::None) ? CreatePiece() : CreatePieceWithType(toSpawn);
 
 	if (!success)
 		Initialize();
 
 	hasUsedHold = true;
+
+	// 홀드 사용 여부가 갱신된 상태를 반영하기 위해 다시 계산
+	UpdatePossiblePlacements();
+}
+
+void Tetris::UpdatePossiblePlacements()
+{
+	// 조각이 생성되지 않은 상태라면 경우의 수도 없음
+	if (currentPiece == nullptr)
+	{
+		possiblePlacements.clear();
+		return;
+	}
+
+	// 현재 조각의 상태를 기반으로 가능한 모든 배치 목록을 계산
+	possiblePlacements = PiecePlacementExplorer::GetAllPossiblePlacements(*this);
+
+	// 현재 조각의 상태와 가능한 배치 목록을 서버로 전송
+	PiecePlacementSender::Send(*this, possiblePlacements);
+}
+
+void Tetris::SendStateAndPlacements()
+{
+	if (currentPiece == nullptr)
+		return;
+
+	GameStateSender::Send(*this);
+	PiecePlacementSender::Send(*this, possiblePlacements);
 }
 
 void Tetris::RemoveLine()

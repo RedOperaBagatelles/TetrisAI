@@ -3,11 +3,16 @@
 #include "Core/Tetris.h"
 #include "Core/PiecesQueue.h"
 #include "Core/AI/AIOutput.h"
+#include "Core/AI/AIInput.h"
 
 #include <iostream>
 #include <string>
 #include <thread>
 #include <chrono>
+#include <vector>
+#include <sstream>
+#include <algorithm>
+#include <memory>
 
 #pragma comment(lib, "ws2_32.lib")
 #pragma warning(disable:4996)
@@ -17,6 +22,14 @@ TCPClient& TCPClient::GetInstance()
 	static TCPClient instance;
 
 	return instance;
+}
+
+void TCPClient::SetTetris(Tetris* tetrisPtr)
+{
+	tetris = tetrisPtr;
+
+	if (tetris && !aiInput)
+		aiInput = std::make_unique<AIInput>(*tetris);
 }
 
 void TCPClient::Initialize()
@@ -80,10 +93,14 @@ void TCPClient::Initialize()
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
 	}
+
+	StartReceiveThread();
 }
 
 TCPClient::~TCPClient()
 {
+	StopReceiveThread();
+
 	if (sock != INVALID_SOCKET)
 	{
 		closesocket(sock);
@@ -155,4 +172,164 @@ bool TCPClient::CheckConnect(std::string_view message) const
 	std::string expectedStr = Json::ToString(expectedRoot.get());
 
 	return message == expectedStr;
+}
+
+void TCPClient::StartReceiveThread()
+{
+	// 이미 수신 스레드가 실행 중이면 종료
+	if (isReceiving)
+		return;
+
+	isReceiving = true;
+	receiveThread = std::thread(&TCPClient::ReceiveLoop, this);
+}
+
+void TCPClient::StopReceiveThread()
+{
+	// 이미 수신 스레드가 중지되었거나 소켓이 유효하지 않으면 종료
+	if (!isReceiving)
+		return;
+
+	isReceiving = false;
+
+	if (sock != INVALID_SOCKET)
+		shutdown(sock, SD_BOTH);
+
+	// 수신 스레드가 종료될 때까지 대기
+	if (receiveThread.joinable())
+		receiveThread.join();
+}
+
+void TCPClient::ReceiveLoop()
+{
+	while (isReceiving && sock != INVALID_SOCKET)
+	{
+		char buffer[4096];
+		int received = recv(sock, buffer, static_cast<int>(sizeof(buffer) - 1), 0);
+
+		if (received <= 0)
+		{
+			if (isReceiving)
+				std::cerr << "Connection lost or failed to receive from server.\n";
+			break;
+		}
+
+		buffer[received] = '\0';
+		std::string message(buffer, received);
+
+		// SelectPathIndex 응답 처리
+		if (message.find("\"Type\":\"SelectPathIndex\"") != std::string::npos || message.find("\"Type\": \"SelectPathIndex\"") != std::string::npos)
+		{
+			try
+			{
+				// 간단한 파싱으로 필요한 정보 추출
+				size_t statusPos = message.find("\"Status\"");
+
+				if (statusPos == std::string::npos)
+					continue;
+
+				size_t colonPos = message.find(':', statusPos);
+
+				if (colonPos == std::string::npos)
+					continue;
+
+				size_t quote1 = message.find('"', colonPos + 1);
+
+				if (quote1 == std::string::npos)
+					continue;
+
+				size_t quote2 = message.find('"', quote1 + 1);
+
+				if (quote2 == std::string::npos)
+					continue;
+
+				std::string status = message.substr(quote1 + 1, quote2 - quote1 - 1);
+
+				if (status == "Response")
+				{
+					// Actions 배열 추출
+					size_t actionsPos = message.find("\"Actions\"");
+
+					if (actionsPos != std::string::npos)
+					{
+						size_t arrStart = message.find('[', actionsPos);
+						size_t arrEnd = message.find(']', actionsPos);
+
+						if (arrStart != std::string::npos && arrEnd != std::string::npos && arrEnd > arrStart)
+						{
+							std::string actionsStr = message.substr(arrStart + 1, arrEnd - arrStart - 1);
+							std::vector<std::string> actionNames;
+							std::string current;
+
+							bool inQuotes = false;
+
+							for (char c : actionsStr)
+							{
+								if (c == '"')
+								{
+									inQuotes = !inQuotes;
+
+									if (!inQuotes && !current.empty())
+									{
+										actionNames.push_back(current);
+										current.clear();
+									}
+
+									else if (inQuotes)
+										current.clear();
+
+									continue;
+								}
+
+								if (inQuotes)
+									current += c;
+							}
+
+							if (!actionNames.empty())
+								ExecuteActions(actionNames);
+						}
+					}
+				}
+			}
+
+			catch (...)
+			{
+				// 파싱 실패시 무시
+			}
+
+			continue;
+		}
+	}
+}
+
+void TCPClient::ExecuteActions(const std::vector<std::string>& actionNames)
+{
+	if (!aiInput)
+	{
+		if (tetris)
+			aiInput = std::make_unique<AIInput>(*tetris);
+		else
+			return;
+	}
+
+	// 액션 시퀀스를 실행하는 동안에는 조각 생성 시점의 상태 전송을 보류
+	isExecutingActions = true;
+
+	for (const auto& name : actionNames)
+	{
+		if (name == "MOVE_LEFT")					aiInput->Action(AIAction::MoveLeft);
+		else if (name == "MOVE_RIGHT")				aiInput->Action(AIAction::MoveRight);
+		else if (name == "MOVE_DOWN")				aiInput->Action(AIAction::MoveDown);
+		else if (name == "ROTATE_CLOCKWISE")		aiInput->Action(AIAction::RotateClockwise);
+		else if (name == "ROTATE_COUNTERCLOCKWISE")	aiInput->Action(AIAction::RotateCounterClockwise);
+		else if (name == "HARD_DROP")				aiInput->Action(AIAction::HardDrop);
+		else if (name == "HOLDING")					aiInput->Action(AIAction::Holding);
+		else if (name == "NONE")					aiInput->Action(AIAction::None);
+	}
+
+	isExecutingActions = false;
+
+	// 배치가 모두 완료된 후 현재 보드 상태와 다음 조각의 가능한 배치를 서버로 전송
+	if (tetris)
+		tetris->SendStateAndPlacements();
 }

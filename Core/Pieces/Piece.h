@@ -37,6 +37,12 @@ public:
     virtual const low_uint(&GetRotateShape() const)[4][4][4] = 0;	// 조각의 회전 형태를 반환하는 순수 가상 메소드
     virtual const PieceType GetPieceType() const = 0;               // 조각의 종류를 반환하는 순수 가상 메소드
 
+	// 조각 종류와 회전 상태에 해당하는 SRS 킥 테이블을 반환하는 메소드 (I 조각은 iKick, 나머지는 normalKick 사용)
+	static const Position* GetKick(PieceType type, low_uint from, low_uint to)
+	{
+		return (type == PieceType::I) ? iKick[from][to] : normalKick[from][to];
+	}
+
 protected:
 	static int NormalizeRotation(low_uint value);
 
