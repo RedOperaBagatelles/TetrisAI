@@ -47,8 +47,11 @@ void Tetris::Update(float deltaTime)
 		currentPiece->Update(deltaTime);
 
 	currentRenderPieces.clear();
+
 	const auto walls = Pieces::GetRenderWalls(startX, startY);
 	currentRenderPieces.insert(currentRenderPieces.end(), walls.begin(), walls.end());
+
+	const auto board = boardState.GetBoard();
 
 	// 맵에 있는 모든 조각들의 렌더링 객체 생성
 	for (int i = 0; i < maxHeight; i++)
@@ -76,22 +79,17 @@ void Tetris::Ready(int x, int y)
 
 	holdPieceType = PieceType::None;
 	hasUsedHold = false;
-	score = 0;
+	boardState.Reset();
 
 	if (scoreText != nullptr)
 		scoreText->setPosition({ (float)startX + 250, (float)startY + 395 });
 
 	currentRenderPieces.clear();
 
-	// 게임 보드 초기화
-	for (int i = 0; i < maxHeight; i++)
-	{
-		for (int j = 0; j < width; j++)
-			board[i][j] = 0;
-	}
-
 	const auto walls = Pieces::GetRenderWalls(x, y);
 	currentRenderPieces.insert(currentRenderPieces.end(), walls.begin(), walls.end());
+
+	const auto board = boardState.GetBoard();
 
 	// 테스트용 맵 데이터 설정
 	board[0][0] = 1;	// I
@@ -101,6 +99,7 @@ void Tetris::Ready(int x, int y)
 	board[0][4] = 5;	// S
 	board[0][5] = 6;	// T
 	board[0][6] = 7;	// Z
+	boardState.RecalculateBoardHeight();
 
 	CreatePiece();
 }
@@ -110,7 +109,10 @@ void Tetris::UpdateScoreText()
 	if (scoreText == nullptr)
 		return;
 
-	scoreText->setString("Score : " + std::to_string(score));
+	scoreText->setString("Score : " + std::to_string(boardState.GetScore()) +
+		"\nLines : " + std::to_string(boardState.GetLineClearCount()) +
+		"\nPieces : " + std::to_string(boardState.GetPiecesPlaceCount()) +
+		"\nHeight : " + std::to_string(boardState.GetBoardHeight()));
 
 	currentRenderPieces.push_back(scoreText);
 }
@@ -363,6 +365,7 @@ void Tetris::SendStateAndPlacements()
 
 void Tetris::RemoveLine()
 {
+	const auto board = boardState.GetBoard();
 	int linesRemoved = 0;
 
 	// 아래에서 위로 올라가면서 줄을 검사
@@ -398,10 +401,11 @@ void Tetris::RemoveLine()
 			for (int j = 0; j < width; j++)
 				board[i][j] = 0;
 		}
-
-		score += linesRemoved;	// 점수 증가
-		UpdateScoreText();
 	}
+
+	boardState.AddLineClearCount(linesRemoved);
+	boardState.RecalculateBoardHeight();
+	UpdateScoreText();
 }
 
 void Tetris::AddRenderPiece(const std::shared_ptr<const sf::Drawable>& piece)
