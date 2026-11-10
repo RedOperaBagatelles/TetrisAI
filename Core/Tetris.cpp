@@ -79,6 +79,7 @@ void Tetris::Ready(int x, int y)
 
 	holdPieceType = PieceType::None;
 	hasUsedHold = false;
+	piecesQueue.Reset();
 	boardState.Reset();
 
 	if (scoreText != nullptr)
