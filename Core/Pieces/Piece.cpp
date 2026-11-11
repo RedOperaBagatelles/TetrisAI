@@ -262,6 +262,7 @@ void Piece::StopSoftDrop()
 void Piece::Place()
 {
 	Draw();	// 조각을 게임 보드에 고정
+	tetris.RecordPiecePlaced();
 
 	// 줄이 완성되었는지 검사하여 제거
 	tetris.RemoveLine();	

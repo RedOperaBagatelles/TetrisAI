@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Core/GameLoop.h"
+#include "Core/BoardState.h"
 #include "Core/PiecesQueue.h"
 #include "Core/AI/Control/PiecePlacementExplorer.h"
 #include "SFML/Graphics.hpp"
@@ -21,10 +22,10 @@ public:
 	void Initialize() override;
 	void Update(float deltaTime) override;
 
-	static constexpr map_size height = 20;
-	static constexpr map_size width = 10;
-	static constexpr map_size topMarginBlock = 2;						// 맵의 위쪽에 보이지 않는 블록 영역 (회전 시 충돌 체크용)
-	static constexpr map_size maxHeight = height + topMarginBlock + 1;	// 게임 보드의 최대 높이 (보이지 않는 블록 영역 포함)
+	static constexpr map_size height = BoardState::height;
+	static constexpr map_size width = BoardState::width;
+	static constexpr map_size topMarginBlock = BoardState::topMargin;
+	static constexpr map_size maxHeight = BoardState::maxHeight;
 
 	void UpdateScoreText();
 	void UpdatePieceUI();
@@ -32,10 +33,12 @@ public:
 	bool CreatePiece();
 	void HoldPiece();
 	void RemoveLine();
+	void RecordPiecePlaced() { boardState.RecordPiecePlaced(); }
 	void AddRenderPiece(const std::shared_ptr<const sf::Drawable>& piece);					// 렌더링할 조각을 추가하는 메소드
 	void AddRenderPieces(const std::vector<std::shared_ptr<const sf::Drawable>>& pieces);	// 렌더링할 조각들을 추가하는 메소드
 
-	map_size(*GetBoard())[width] { return board; }		// 게임 보드의 2차원 배열을 반환하는 메소드
+	map_size(*GetBoard())[width] { return boardState.GetBoard(); }		// 게임 보드의 2차원 배열을 반환하는 메소드
+	const BoardState& GetBoardState() const { return boardState; }
 	map_size GetStartX() const { return startX; }		// 게임 보드의 시작 X 좌표를 반환하는 메소드
 	map_size GetStartY() const { return startY; }		// 게임 보드의 시작 Y 좌표를 반환하는 메소드
 
@@ -55,14 +58,12 @@ private:
 	std::shared_ptr<sf::Text> scoreText;
 	std::shared_ptr<class Piece> currentPiece;					// 현재 조각 객체
 
-	map_size board[maxHeight][width] = { 0 };
+	BoardState boardState;										// 현재 게임 보드 상태를 관리하는 객체
 	Window& window;												// 테트리스 게임이 속한 창 객체에 대한 참조
 	PiecesQueue piecesQueue;									// 다음에 나올 조각들의 종류를 관리하는 객체
 
 	map_size startX = 0;
 	map_size startY = 0;
-
-	int score = 0;
 
 	PieceType holdPieceType = PieceType::None;		// 현재 hold한 조각의 종류
 	bool hasUsedHold = false;						// 해당 턴에 홀드를 사용했는지 여부 (홀드는 한 턴에 한 번만 사용할 수 있음)

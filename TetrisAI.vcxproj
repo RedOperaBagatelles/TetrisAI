@@ -140,6 +140,7 @@
     <ClCompile Include="Core\AI\ConnectAI\PiecePlacementSender.cpp" />
     <ClCompile Include="Core\AI\ConnectAI\TCPClient.cpp" />
     <ClCompile Include="Core\AI\Control\PiecePlacementExplorer.cpp" />
+    <ClCompile Include="Core\BoardState.cpp" />
     <ClCompile Include="Core\InputSystem\KeyBoard.cpp" />
     <ClCompile Include="Core\Pieces.cpp" />
     <ClCompile Include="Core\PiecesQueue.cpp" />
@@ -184,6 +185,7 @@
     <ClInclude Include="Core\Pieces\ZPiece.h" />
     <ClInclude Include="Core\Window.h" />
     <ClInclude Include="Core\Tetris.h" />
+    <ClInclude Include="Core\BoardState.h" />
     <ClInclude Include="External\SFML\include\SFML\Audio.hpp" />
     <ClInclude Include="External\SFML\include\SFML\Audio\AudioResource.hpp" />
     <ClInclude Include="External\SFML\include\SFML\Audio\Export.hpp" />
