@@ -21,6 +21,7 @@ AIOutputData AIOutput::GetOutputData() const
 
 	map_size(*board)[Tetris::width] = tetris.GetBoard();
 
+	// 실제 게임 보드의 상태를 AIOutputData 구조체에 복사
 	for (map_size y = 0; y < Tetris::maxHeight; y++)
 	{
 		for (map_size x = 0; x < Tetris::width; x++)
@@ -34,6 +35,29 @@ AIOutputData AIOutput::GetOutputData() const
 		data.currentPiece.type = currentPiece->GetPieceType();
 		data.currentPiece.rotation = currentPiece->GetRotation();
 		data.currentPiece.position = currentPiece->GetPosition();
+
+		// 현재 조각의 위치와 회전 상태를 기반으로 보드에서 해당 조각의 블록을 제거
+		const auto& shape = currentPiece->GetRotateShape()[data.currentPiece.rotation];
+		const Position position = data.currentPiece.position;
+		const int pieceType = static_cast<int>(data.currentPiece.type);
+
+		for (int y = 0; y < 4; y++)
+		{
+			for (int x = 0; x < 4; x++)
+			{
+				// shape 배열에서 0인 부분은 조각이 없는 부분이므로 건너뜀
+				if (shape[y][x] == 0)
+					continue;
+
+				// 보드 좌표를 계산하고, 해당 좌표가 보드 범위 내에 있으며 현재 조각의 블록과 일치하는 경우 보드에서 제거
+				const int boardX = static_cast<int>(position.x) + x;
+				const int boardY = Tetris::maxHeight - (static_cast<int>(position.y) + y + 1);
+
+				// 보드 좌표가 유효한 범위 내에 있는지 확인하고, 현재 조각의 블록과 일치하는 경우 보드에서 제거
+				if (boardX >= 0 && boardX < Tetris::width && boardY >= 0 && boardY < Tetris::maxHeight && data.board[boardY][boardX] == pieceType)
+					data.board[boardY][boardX] = 0;
+			}
+		}
 	}
 
 	data.holdPiece = tetris.GetHoldPieceType();
