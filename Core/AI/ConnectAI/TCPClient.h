@@ -4,6 +4,7 @@
 #include "Core/AI/AIInput.h"
 
 #include <cstdint>
+#include <cstddef>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -33,7 +34,7 @@ public:
 
 	bool IsExecutingActions() const { return isExecutingActions; }	// 서버가 선택한 액션 시퀀스를 실행 중인지 반환
 
-	void SetTetris(Tetris* tetrisPtr);							// Tetris 객체 설정
+	void SetTetris(Tetris* tetrisPtr, std::size_t gameCount = 1);						// 대표 Tetris와 전체 게임 수 설정
 
 private:
 	std::string GetCheckConnectMessage() const;			// 서버와 연결되었는지 확인하는 메시지를 반환하는 메소드
@@ -53,5 +54,6 @@ private:
 	std::atomic<bool> isExecutingActions{ false };
 
 	Tetris* tetris = nullptr;
+	std::size_t gameCount = 1;
 	std::unique_ptr<AIInput> aiInput;
 };

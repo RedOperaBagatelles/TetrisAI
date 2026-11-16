@@ -10,8 +10,6 @@
 #include <thread>
 #include <chrono>
 #include <vector>
-#include <sstream>
-#include <algorithm>
 #include <memory>
 
 #pragma comment(lib, "ws2_32.lib")
@@ -24,9 +22,10 @@ TCPClient& TCPClient::GetInstance()
 	return instance;
 }
 
-void TCPClient::SetTetris(Tetris* tetrisPtr)
+void TCPClient::SetTetris(Tetris* tetrisPtr, std::size_t gameCount)
 {
 	tetris = tetrisPtr;
+	this->gameCount = gameCount;
 
 	if (tetris && !aiInput)
 		aiInput = std::make_unique<AIInput>(*tetris);
@@ -156,6 +155,7 @@ std::string TCPClient::GetCheckConnectMessage() const
 	root->AddChild(std::make_unique<Json>("QueueSize", std::to_string(PiecesQueue::queueSize)));
 	root->AddChild(std::make_unique<Json>("MessageSize", std::to_string(AIOutput::messageSize)));
 	root->AddChild(std::make_unique<Json>("PieceTypeCount", std::to_string(static_cast<unsigned int>(PieceType::Count))));
+	root->AddChild(std::make_unique<Json>("GameCount", std::to_string(gameCount)));
 
 	return Json::ToString(root.get());
 }
@@ -211,6 +211,7 @@ void TCPClient::ReceiveLoop()
 		{
 			if (isReceiving)
 				std::cerr << "Connection lost or failed to receive from server.\n";
+
 			break;
 		}
 

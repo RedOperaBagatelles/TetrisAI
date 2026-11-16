@@ -11,7 +11,7 @@ int main()
 	Window window;
 	window.Initialize();
 
-    TCPClient::GetInstance().SetTetris(&window.GetTetris());
+    TCPClient::GetInstance().SetTetris(&window.GetTetris(), window.GetGameCount());
     TCPClient::GetInstance().Initialize();
 
 	// 연결 초기화 후 보관된 메시지가 있으면 전송 (게임 상태 → 가능한 배치 순서 유지)

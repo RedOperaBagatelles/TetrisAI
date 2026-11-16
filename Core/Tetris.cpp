@@ -20,7 +20,7 @@
 #include <deque>
 #include <memory>
 
-Tetris::Tetris(Window& window) : window(window)
+Tetris::Tetris(Window& window, int x, int y) : window(window), gamePosX(x), gamePosY(y)
 {
 
 }
@@ -37,7 +37,7 @@ void Tetris::Initialize()
 	scoreText->setCharacterSize(16);
 	scoreText->setFillColor(sf::Color::White);
 
-	Ready(50, 50);
+	Ready(gamePosX, gamePosY);
 	UpdateScoreText();
 }
 

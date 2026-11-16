@@ -17,7 +17,7 @@ class Piece;
 class Tetris : public GameLoop
 {
 public:
-	Tetris(Window& window);
+	Tetris(Window& window, int x = 50, int y = 50);
 
 	void Initialize() override;
 	void Update(float deltaTime) override;
@@ -64,6 +64,7 @@ private:
 
 	map_size startX = 0;
 	map_size startY = 0;
+	int gamePosX, gamePosY;
 
 	PieceType holdPieceType = PieceType::None;		// 현재 hold한 조각의 종류
 	bool hasUsedHold = false;						// 해당 턴에 홀드를 사용했는지 여부 (홀드는 한 턴에 한 번만 사용할 수 있음)

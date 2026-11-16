@@ -40,6 +40,12 @@ class GameVisualizer:
         self.canvas = tk.Canvas(self.root, width=canvasWidth, height=canvasHeight, bg="#1e1e1e", highlightthickness=0, )
         self.canvas.pack(padx=5, pady=5)
 
+        self.game_count_font = tkfont.Font(family="Consolas", size=11, weight="bold")
+        self.game_count_text = self.canvas.create_text(
+            BOARD_X, 25, text="Game Instances: -", fill="#dddddd",
+            font=self.game_count_font, anchor="nw",
+        )
+
         self.DrawBoardBorder()
         self.InitBoardCells()
         self.InitInfoTexts()
@@ -184,6 +190,9 @@ class GameVisualizer:
             text=f"#{index} ({placement.x}, {placement.y}) rot={placement.rotation} [{actions}]",
         )
 
+    def UpdateGameCount(self, gameCount):
+        self.canvas.itemconfig(self.game_count_text, text=f"Game Instances: {gameCount}")
+
     def PollQueue(self):
         try:
             while True:
@@ -194,6 +203,9 @@ class GameVisualizer:
 
                 elif message.get("kind") == "selection":
                     self.UpdateSelection(message["placement"], message.get("index"))
+
+                elif message.get("kind") == "game_count":
+                    self.UpdateGameCount(message["count"])
 
         except Exception:
             pass

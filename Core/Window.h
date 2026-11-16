@@ -7,6 +7,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <cstddef>
 #include <vector>
 #include <memory>
 
@@ -24,14 +25,16 @@ public:
 	void AddRenderTarget(const std::shared_ptr<const sf::Drawable>& drawable);
 	void AddRenderTargets(const std::vector<std::shared_ptr<const sf::Drawable>>& drawables);
 
-	Tetris& GetTetris() { return tetris; }
+	Tetris& CreateTetris(int x, int y);
+	Tetris& GetTetris() { return *games.front(); }
+	std::size_t GetGameCount() const { return games.size(); }
 
 private:
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 	sf::RenderWindow window{ sf::VideoMode({width, height}), "Tetris" };
 	std::vector<std::shared_ptr<const sf::Drawable>> renderTargets;		// 해당 프레임에 그릴 객체들을 저장하는 벡터
-	Tetris tetris{ *this };												// 테트리스 게임 객체
+	std::vector<std::unique_ptr<Tetris>> games;								// 창에서 관리하는 테트리스 게임들
 	Keyboard keyboard;													// 키보드 입력 시스템 객체
 
 	HWND hWnd = nullptr;

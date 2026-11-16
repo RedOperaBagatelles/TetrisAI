@@ -70,6 +70,9 @@ def ServerLoop(dataQueue: Queue):
                         queueSize = int(request.get("QueueSize", GameState.NEXT_PIECE_QUEUE_SIZE))
                         pieceTypeCount = request.get("PieceTypeCount")
                         messageSize = request.get("MessageSize")
+                        gameCount = int(request.get("GameCount", 1))
+
+                        dataQueue.put({"kind": "game_count", "count": gameCount})
 
                         # 클라이언트로 부터 받은 보드 크기, 큐 크기, 메시지 크기 정보로 GameState 클래스 설정 갱신
                         GameState.Configure(boardWidth, boardHeight, queueSize, int(pieceTypeCount) if pieceTypeCount is not None else None,)

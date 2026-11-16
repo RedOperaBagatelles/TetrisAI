@@ -13,7 +13,9 @@ void Window::Initialize()
     originalWndProc = reinterpret_cast<WNDPROC>(GetWindowLongPtr(hWnd, GWLP_WNDPROC));
     SetWindowLongPtr(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&Window::WndProc));
 
-    tetris.Initialize();
+    CreateTetris(50, 50);
+    CreateTetris(400, 50);
+    CreateTetris(750, 50);
 }
 
 void Window::Update(float deltaTime)
@@ -23,7 +25,8 @@ void Window::Update(float deltaTime)
     window.setTitle("Tetris - FPS: " + std::to_string(static_cast<int>(fps)));
 
     KeyBoardInput(deltaTime);
-	tetris.Update(deltaTime);
+    for (const auto& game : games)
+        game->Update(deltaTime);
 }
 
 LRESULT CALLBACK Window::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -91,9 +94,21 @@ void Window::AddRenderTargets(const std::vector<std::shared_ptr<const sf::Drawab
 		renderTargets.push_back(drawable);
 }
 
+Tetris& Window::CreateTetris(int x, int y)
+{
+    auto game = std::make_unique<Tetris>(*this, x, y);
+    game->Initialize();
+    games.push_back(std::move(game));
+    return *games.back();
+}
+
 void Window::KeyBoardInput(float deltaTime)
 {
-	auto currentPiece = tetris.GetCurrentPiece();
+	if (games.empty())
+		return;
+
+	Tetris& activeGame = *games.front();
+	auto currentPiece = activeGame.GetCurrentPiece();
 
 	if (currentPiece == nullptr)
 		return;
@@ -125,7 +140,7 @@ void Window::KeyBoardInput(float deltaTime)
 				break;
 
 			case VK_UP:
-				tetris.HoldPiece();
+				activeGame.HoldPiece();
 				printf("Hold\n");
 				break;
 
@@ -140,7 +155,7 @@ void Window::KeyBoardInput(float deltaTime)
 
 			// 홀드
 			case 'C':
-				tetris.HoldPiece();
+				activeGame.HoldPiece();
 				printf("Hold\n");
 				break;
 
