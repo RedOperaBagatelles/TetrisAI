@@ -2,6 +2,8 @@
 from enum import IntEnum
 from typing import List
 
+from GameState import PieceType
+
 
 # AI가 수행할 수 있는 행동을 나타내는 열거형 (Core/AI/AIInput.h 의 enum class AIAction 과 값이 반드시 일치해야 함)
 class AIAction(IntEnum):
@@ -29,8 +31,8 @@ class Placement:
 class PossiblePlacements:
     MESSAGE_TYPE = 0x02  # PiecePlacementSender::messageType (possible_placements 메시지 식별 바이트)
 
-    # 헤더(1) + 현재 조각(x, y, rotation = 3) + 배치 개수(2)
-    HEADER_SIZE = 1 + 3 + 2
+    # 헤더(1) + 현재 조각(x, y, rotation = 3) + 홀드 조각(1) + 배치 개수(2)
+    HEADER_SIZE = 1 + 3 + 1 + 2
 
     # 배치(위치 x, y, rotation = 3) + 액션 개수(2)
     PLACEMENT_SIZE = 3 + 2
@@ -38,6 +40,7 @@ class PossiblePlacements:
     x         : int                 # 현재 조각의 X 위치
     y         : int                 # 현재 조각의 Y 위치
     rotation  : int                 # 현재 조각의 회전 상태
+    holdPiece : PieceType           # 홀드 조각의 종류 (HOLDING 액션으로 꺼내게 될 조각)
     placements: List[Placement]     # 조각을 놓을 수 있는 모든 경우의 수
 
     # PiecePlacementSender::Send() 와 동일한 순서로 바이트를 파싱해 PossiblePlacements 객체로 변환
@@ -51,11 +54,12 @@ class PossiblePlacements:
 
         offset = 1
 
-        # 현재 조각의 위치와 회전 상태 파싱 (x, y는 부호 있는 8비트 정수)
+        # 현재 조각의 위치와 회전 상태, 홀드 조각의 종류 파싱 (x, y는 부호 있는 8비트 정수)
         x = int.from_bytes(data[offset:offset + 1], 'little', signed=True)
         y = int.from_bytes(data[offset + 1:offset + 2], 'little', signed=True)
         rotation = data[offset + 2]
-        offset += 3
+        holdPiece = PieceType(data[offset + 3])
+        offset += 4
 
         # 배치 개수 파싱 (리틀엔디안 2바이트)
         placementCount = int.from_bytes(data[offset:offset + 2], 'little')
@@ -87,4 +91,4 @@ class PossiblePlacements:
         if offset != len(data):
             raise ValueError(f"잘못된 배치 메시지 크기 : {len(data)} (expected {offset})")
 
-        return thisClass(x=x, y=y, rotation=rotation, placements=placements)
+        return thisClass(x=x, y=y, rotation=rotation, holdPiece=holdPiece, placements=placements)

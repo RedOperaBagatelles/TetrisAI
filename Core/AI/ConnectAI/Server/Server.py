@@ -34,7 +34,7 @@ def ServerLoop(dataQueue: Queue):
                 if messageType == "possible_placements":
                     placements = PossiblePlacements.FromBytes(message)
 
-                    print(f"[Placements] 현재 조각 ({placements.x}, {placements.y}) rotation={placements.rotation} | 가능한 배치 {len(placements.placements)}개")
+                    print(f"[Placements] 현재 조각 ({placements.x}, {placements.y}) rotation={placements.rotation} | 홀드 조각 {placements.holdPiece.name} | 가능한 배치 {len(placements.placements)}개")
 
                     for placement in placements.placements:
                         actions = ", ".join(action.name for action in placement.actions)
