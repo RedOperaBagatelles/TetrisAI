@@ -2,6 +2,8 @@
 
 #include "Pieces/Piece.h"
 
+#include <algorithm>
+
 Window* Window::instance = nullptr;
 
 void Window::Initialize()
@@ -12,10 +14,6 @@ void Window::Initialize()
     instance = this;
     originalWndProc = reinterpret_cast<WNDPROC>(GetWindowLongPtr(hWnd, GWLP_WNDPROC));
     SetWindowLongPtr(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&Window::WndProc));
-
-    CreateTetris(50, 50);
-    CreateTetris(400, 50);
-    CreateTetris(750, 50);
 }
 
 void Window::Update(float deltaTime)
@@ -94,12 +92,96 @@ void Window::AddRenderTargets(const std::vector<std::shared_ptr<const sf::Drawab
 		renderTargets.push_back(drawable);
 }
 
+std::vector<std::reference_wrapper<Tetris>> Window::CreateTetris(int count)
+{
+    std::vector<std::reference_wrapper<Tetris>> createdGames;
+
+    if (count <= 0)
+        return createdGames;
+
+    // 창 공간을 가장 잘 활용하는 열 개수를 찾음
+    // 열 수를 1~N까지 바꿔 보며 보드가 가장 크게 보이는(스케일이 가장 큰) 배치를 선택한다.
+    int bestColumns = 1;
+    float bestScale = 0.0f;
+
+    for (int columns = 1; columns <= count; ++columns)
+    {
+        const int rows = (count + columns - 1) / columns;
+        const float contentWidth = static_cast<float>(columns * gameAreaPixelWidth + (columns - 1) * horizontalGap + 2 * margin);
+        const float contentHeight = static_cast<float>(rows * gameAreaPixelHeight + (rows - 1) * verticalGap + 2 * margin);
+        const float scale = std::min(static_cast<float>(width) / contentWidth, static_cast<float>(height) / contentHeight);
+
+		// 현재 열 수에서의 스케일이 이전까지의 최적 스케일보다 크면 최적 배치를 갱신
+        if (scale > bestScale)
+        {
+            bestScale = scale;
+            bestColumns = columns;
+        }
+    }
+
+    // 선택된 배치에 따라 보드를 생성
+    createdGames.reserve(count);
+
+    for (int i = 0; i < count; ++i)
+    {
+		// 현재 보드의 위치 계산
+        const int x = margin + (i % bestColumns) * (gameAreaPixelWidth + horizontalGap);
+        const int y = margin + (i / bestColumns) * (gameAreaPixelHeight + verticalGap);
+
+        createdGames.push_back(CreateTetris(x, y));
+    }
+
+    // 선택된 배치의 전체 보드가 한 창 안에 보이도록 뷰를 조정
+    FitGamesToWindow();
+
+    return createdGames;
+}
+
 Tetris& Window::CreateTetris(int x, int y)
 {
     auto game = std::make_unique<Tetris>(*this, x, y);
     game->Initialize();
     games.push_back(std::move(game));
+
     return *games.back();
+}
+
+void Window::FitGamesToWindow()
+{
+    if (games.empty())
+    {
+        window.setView(window.getDefaultView());
+        return;
+    }
+
+    float left = static_cast<float>(games.front()->GetStartX());
+    float top = static_cast<float>(games.front()->GetStartY());
+    float right = left + gameAreaPixelWidth;
+    float bottom = top + gameAreaPixelHeight;
+
+    for (const auto& game : games)
+    {
+        left = std::min(left, static_cast<float>(game->GetStartX()));
+        top = std::min(top, static_cast<float>(game->GetStartY()));
+        right = std::max(right, static_cast<float>(game->GetStartX()) + gameAreaPixelWidth);
+        bottom = std::max(bottom, static_cast<float>(game->GetStartY()) + gameAreaPixelHeight);
+    }
+
+    // 여백을 포함한 게임 영역 전체가 창 안에 들어오도록 스케일 계산
+    left -= margin;
+    top -= margin;
+    right += margin;
+    bottom += margin;
+
+    const float contentWidth = right - left;
+    const float contentHeight = bottom - top;
+    const float scale = std::min(static_cast<float>(width) / contentWidth,
+                                 static_cast<float>(height) / contentHeight);
+
+    sf::View view;
+    view.setCenter({ (left + right) / 2.0f, (top + bottom) / 2.0f });
+    view.setSize({ static_cast<float>(width) / scale, static_cast<float>(height) / scale });
+    window.setView(view);
 }
 
 void Window::KeyBoardInput(float deltaTime)

@@ -39,8 +39,8 @@ public:
 
 	map_size(*GetBoard())[width] { return boardState.GetBoard(); }		// 게임 보드의 2차원 배열을 반환하는 메소드
 	const BoardState& GetBoardState() const { return boardState; }
-	map_size GetStartX() const { return startX; }		// 게임 보드의 시작 X 좌표를 반환하는 메소드
-	map_size GetStartY() const { return startY; }		// 게임 보드의 시작 Y 좌표를 반환하는 메소드
+	int GetStartX() const { return startPixelX; }		// 게임 보드의 시작 X 좌표(픽셀)를 반환하는 메소드
+	int GetStartY() const { return startPixelY; }		// 게임 보드의 시작 Y 좌표(픽셀)를 반환하는 메소드
 
 	std::shared_ptr<Piece> GetCurrentPiece() const;
 	PieceType GetHoldPieceType() const;						// 현재 홀드 중인 조각의 종류를 반환하는 메소드
@@ -56,15 +56,14 @@ private:
 	std::vector<std::shared_ptr<const sf::Drawable>> currentRenderPieces;
 	sf::Font font;
 	std::shared_ptr<sf::Text> scoreText;
-	std::shared_ptr<class Piece> currentPiece;					// 현재 조각 객체
+	std::shared_ptr<class Piece> currentPiece;		// 현재 조각 객체
 
-	BoardState boardState;										// 현재 게임 보드 상태를 관리하는 객체
-	Window& window;												// 테트리스 게임이 속한 창 객체에 대한 참조
-	PiecesQueue piecesQueue;									// 다음에 나올 조각들의 종류를 관리하는 객체
+	BoardState boardState;							// 현재 게임 보드 상태를 관리하는 객체
+	Window& window;									// 테트리스 게임이 속한 창 객체에 대한 참조
+	PiecesQueue piecesQueue;						// 다음에 나올 조각들의 종류를 관리하는 객체
 
-	map_size startX = 0;
-	map_size startY = 0;
-	int gamePosX, gamePosY;
+	int startPixelX = 0;							// 보드의 화면상 시작 X 좌표 (픽셀 단위이므로 map_size를 사용하지 않음)
+	int startPixelY = 0;							// 보드의 화면상 시작 Y 좌표 (픽셀 단위이므로 map_size를 사용하지 않음)
 
 	PieceType holdPieceType = PieceType::None;		// 현재 hold한 조각의 종류
 	bool hasUsedHold = false;						// 해당 턴에 홀드를 사용했는지 여부 (홀드는 한 턴에 한 번만 사용할 수 있음)

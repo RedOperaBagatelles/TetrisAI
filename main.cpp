@@ -11,6 +11,9 @@ int main()
 	Window window;
 	window.Initialize();
 
+	// 생성할 테트리스 개수만 지정하면 한 창 안에 모든 보드가 배치된다.
+	window.CreateTetris(100);
+
     TCPClient::GetInstance().SetTetris(&window.GetTetris(), window.GetGameCount());
     TCPClient::GetInstance().Initialize();
 

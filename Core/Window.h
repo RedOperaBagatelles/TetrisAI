@@ -7,7 +7,6 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <cstddef>
 #include <vector>
 #include <memory>
 
@@ -25,16 +24,21 @@ public:
 	void AddRenderTarget(const std::shared_ptr<const sf::Drawable>& drawable);
 	void AddRenderTargets(const std::vector<std::shared_ptr<const sf::Drawable>>& drawables);
 
+	// 생성할 테트리스 개수를 인자로 받아 창 공간을 최대한 활용하도록 배치하는 메소드
+	std::vector<std::reference_wrapper<Tetris>> CreateTetris(int count);
+	// 원하는 화면 좌표에 테트리스 한 개를 생성하는 메소드
 	Tetris& CreateTetris(int x, int y);
 	Tetris& GetTetris() { return *games.front(); }
+	Tetris& GetTetris(std::size_t index) { return *games.at(index); }
 	std::size_t GetGameCount() const { return games.size(); }
 
 private:
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	void FitGamesToWindow();											// 생성된 모든 게임 보드가 창 안에 들어오도록 카메라(View)를 조정하는 메소드
 
 	sf::RenderWindow window{ sf::VideoMode({width, height}), "Tetris" };
 	std::vector<std::shared_ptr<const sf::Drawable>> renderTargets;		// 해당 프레임에 그릴 객체들을 저장하는 벡터
-	std::vector<std::unique_ptr<Tetris>> games;								// 창에서 관리하는 테트리스 게임들
+	std::vector<std::unique_ptr<Tetris>> games;							// 창에서 관리하는 테트리스 게임들
 	Keyboard keyboard;													// 키보드 입력 시스템 객체
 
 	HWND hWnd = nullptr;
@@ -44,4 +48,13 @@ private:
 
 	constexpr static int width = 1280;	// 창의 너비
 	constexpr static int height = 720;	// 창의 높이
+
+	// 게임 한 개가 화면에서 차지하는 영역 (보드 + 홀드/다음 조각 UI + 점수 텍스트)
+	constexpr static int gameAreaPixelWidth = 360;
+	constexpr static int gameAreaPixelHeight = 480;
+
+	// 게임 사이 간격 및 창 가장자리 여백
+	constexpr static int horizontalGap = 20;
+	constexpr static int verticalGap = 20;
+	constexpr static int margin = 20;
 };

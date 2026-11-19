@@ -20,7 +20,7 @@
 #include <deque>
 #include <memory>
 
-Tetris::Tetris(Window& window, int x, int y) : window(window), gamePosX(x), gamePosY(y)
+Tetris::Tetris(Window& window, int x, int y) : window(window), startPixelX(x), startPixelY(y)
 {
 
 }
@@ -37,7 +37,7 @@ void Tetris::Initialize()
 	scoreText->setCharacterSize(16);
 	scoreText->setFillColor(sf::Color::White);
 
-	Ready(gamePosX, gamePosY);
+	Ready(startPixelX, startPixelY);
 	UpdateScoreText();
 }
 
@@ -48,7 +48,7 @@ void Tetris::Update(float deltaTime)
 
 	currentRenderPieces.clear();
 
-	const auto walls = Pieces::GetRenderWalls(startX, startY);
+	const auto walls = Pieces::GetRenderWalls(startPixelX, startPixelY);
 	currentRenderPieces.insert(currentRenderPieces.end(), walls.begin(), walls.end());
 
 	const auto board = boardState.GetBoard();
@@ -62,7 +62,7 @@ void Tetris::Update(float deltaTime)
 			if (board[i][j] == 0)
 				continue;
 
-			currentRenderPieces.push_back(Pieces::GetRenderOnePices(j, height - i - 2, static_cast<PieceType>(board[i][j]), startX, startY));
+			currentRenderPieces.push_back(Pieces::GetRenderOnePices(j, height - i - 2, static_cast<PieceType>(board[i][j]), startPixelX, startPixelY));
 		}
 	}
 
@@ -74,8 +74,8 @@ void Tetris::Update(float deltaTime)
 
 void Tetris::Ready(int x, int y)
 {
-	startX = x;
-	startY = y;
+	startPixelX = x;
+	startPixelY = y;
 
 	holdPieceType = PieceType::None;
 	hasUsedHold = false;
@@ -83,7 +83,7 @@ void Tetris::Ready(int x, int y)
 	boardState.Reset();
 
 	if (scoreText != nullptr)
-		scoreText->setPosition({ (float)startX + 250, (float)startY + 395 });
+		scoreText->setPosition({ (float)startPixelX + 250, (float)startPixelY + 395 });
 
 	currentRenderPieces.clear();
 
@@ -122,12 +122,12 @@ void Tetris::UpdatePieceUI()
 {
 	sf::RectangleShape holdingPieceUIBackground(sf::Vector2f(85, 85));
 	holdingPieceUIBackground.setFillColor(sf::Color(50, 50, 50));
-	holdingPieceUIBackground.setPosition(sf::Vector2f((float)(startX + 250), (float)startY));
+	holdingPieceUIBackground.setPosition(sf::Vector2f((float)(startPixelX + 250), (float)startPixelY));
 
 	// 다음 조각 UI 배경 설정
 	sf::RectangleShape nextPieceUIBackground(sf::Vector2f(85, 275));
 	nextPieceUIBackground.setFillColor(sf::Color(50, 50, 50));
-	nextPieceUIBackground.setPosition(sf::Vector2f((float)(startX + 250), (float)(startY + 110)));
+	nextPieceUIBackground.setPosition(sf::Vector2f((float)(startPixelX + 250), (float)(startPixelY + 110)));
 
 	currentRenderPieces.push_back(std::make_shared<sf::RectangleShape>(holdingPieceUIBackground));
 	currentRenderPieces.push_back(std::make_shared<sf::RectangleShape>(nextPieceUIBackground));
