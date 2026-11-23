@@ -17,23 +17,53 @@
 
 #include <SFML/Graphics/Text.hpp>
 
+#include <algorithm>
 #include <deque>
 #include <memory>
 
-Tetris::Tetris(Window& window, int x, int y) : window(window), startPixelX(x), startPixelY(y)
-{
+// 모든 보드는 Ready() 직후 상태가 동일하므로 첫 보드의 BFS 결과를 재사용한다.
+std::vector<PiecePlacement> Tetris::initialPlace;
+bool Tetris::hasInitialPlace = false;
 
+void Tetris::CreateBlock(sf::VertexArray& vertices, float x, float y, float width, float height, const sf::Color& color)
+{
+	const float right = x + width;
+	const float bottom = y + height;
+
+	vertices.append(sf::Vertex{ { x, y }, color });
+	vertices.append(sf::Vertex{ { x, bottom }, color });
+	vertices.append(sf::Vertex{ { right, bottom }, color });
+	vertices.append(sf::Vertex{ { x, y }, color });
+	vertices.append(sf::Vertex{ { right, bottom }, color });
+	vertices.append(sf::Vertex{ { right, y }, color });
+}
+
+void Tetris::CreateBlock(sf::VertexArray& vertices, int boardX, int boardY, const sf::Color& color, int offsetX, int offsetY)
+{
+	constexpr int size = Pieces::blockSize - Pieces::blockPadding;
+	float x = static_cast<float>(offsetX + (boardX + 1) * Pieces::blockSize);
+	float y = static_cast<float>(offsetY + (boardY + 1) * Pieces::blockSize);
+
+	CreateBlock(vertices, x, y, static_cast<float>(size), static_cast<float>(size), color);
+}
+
+Tetris::Tetris(Window& window, int x, int y)
+	: window(window), startPixelX(x), startPixelY(y)
+{
+	// clear()는 메모리를 해제하지 않으므로 미리 충분한 크기를 확보해 둔다.
+	renderVertices = std::make_shared<sf::VertexArray>(sf::PrimitiveType::Triangles);
+	renderVertices->resize(1024);
+	renderVertices->clear();
+
+	wallVertices = std::make_shared<sf::VertexArray>(sf::PrimitiveType::Triangles);
+	wallVertices->resize(512);
+	wallVertices->clear();
 }
 
 void Tetris::Initialize()
 {
-	bool isFontLoaded = font.openFromFile("C:/Windows/Fonts/CascadiaCode.ttf");
-
-	// 폰트 로드 실패 처리 (예: 예외 던지기, 기본 폰트 사용 등)
-	if (!isFontLoaded)
-		throw std::runtime_error("Failed to load font");
-
-	scoreText = std::make_shared<sf::Text>(font);
+	// 폰트 로드는 GetFont() 안에서 딱 한 번만 수행된다.
+	scoreText = std::make_shared<sf::Text>(Window::GetFont());
 	scoreText->setCharacterSize(16);
 	scoreText->setFillColor(sf::Color::White);
 
@@ -46,30 +76,38 @@ void Tetris::Update(float deltaTime)
 	if (currentPiece != nullptr)
 		currentPiece->Update(deltaTime);
 
-	currentRenderPieces.clear();
-
-	const auto walls = Pieces::GetRenderWalls(startPixelX, startPixelY);
-	currentRenderPieces.insert(currentRenderPieces.end(), walls.begin(), walls.end());
+	// 객체를 새로 만들지 않고 재사용하는 정점 버퍼만 비운다.
+	renderVertices->clear();
 
 	const auto board = boardState.GetBoard();
 
-	// 맵에 있는 모든 조각들의 렌더링 객체 생성
+	// 맵에 있는 조각들을 정점 버퍼에 직접 기록
 	for (int i = 0; i < maxHeight; i++)
 	{
 		for (int j = 0; j < width; j++)
 		{
-			// 해당 위치에 조각이 없으면 건너뜀
 			if (board[i][j] == 0)
 				continue;
 
-			currentRenderPieces.push_back(Pieces::GetRenderOnePices(j, height - i - 2, static_cast<PieceType>(board[i][j]), startPixelX, startPixelY));
+			CreateBlock(*renderVertices, j, height - i - 2, Pieces::colors[static_cast<int>(board[i][j])], startPixelX, startPixelY);
 		}
 	}
 
-	currentPiece->ShowGhost();
-	UpdateScoreText();
-	UpdatePieceUI();
-	window.AddRenderTargets(currentRenderPieces);
+	if (currentPiece != nullptr)
+		currentPiece->ShowGhost();
+
+	// 보드가 작으면 읽을 수 없는 HUD/텍스트는 아예 만들지 않는다.
+	if (showDetails)
+	{
+		UpdateScoreText();
+		UpdatePieceUI();
+	}
+
+	// 벽(고정), 블록/고스트/HUD(매 프레임), 점수 텍스트 → 보드당 2~3 draw call
+	window.AddRenderTarget(*wallVertices);
+	window.AddRenderTarget(*renderVertices);
+	if (showDetails && scoreText != nullptr)
+		window.AddRenderTarget(*scoreText);
 }
 
 void Tetris::Ready(int x, int y)
@@ -85,10 +123,9 @@ void Tetris::Ready(int x, int y)
 	if (scoreText != nullptr)
 		scoreText->setPosition({ (float)startPixelX + 250, (float)startPixelY + 395 });
 
-	currentRenderPieces.clear();
-
-	const auto walls = Pieces::GetRenderWalls(x, y);
-	currentRenderPieces.insert(currentRenderPieces.end(), walls.begin(), walls.end());
+	// 벽은 위치가 바뀔 때만 다시 만든다.
+	RebuildWallVertices();
+	renderVertices->clear();
 
 	const auto board = boardState.GetBoard();
 
@@ -102,7 +139,7 @@ void Tetris::Ready(int x, int y)
 	board[0][6] = 7;	// Z
 	boardState.RecalculateBoardHeight();
 
-	CreatePiece();
+	CreatePiece(true);
 }
 
 void Tetris::UpdateScoreText()
@@ -114,166 +151,135 @@ void Tetris::UpdateScoreText()
 		"\nLines : " + std::to_string(boardState.GetLineClearCount()) +
 		"\nPieces : " + std::to_string(boardState.GetPiecesPlaceCount()) +
 		"\nHeight : " + std::to_string(boardState.GetBoardHeight()));
-
-	currentRenderPieces.push_back(scoreText);
 }
 
 void Tetris::UpdatePieceUI()
 {
-	sf::RectangleShape holdingPieceUIBackground(sf::Vector2f(85, 85));
-	holdingPieceUIBackground.setFillColor(sf::Color(50, 50, 50));
-	holdingPieceUIBackground.setPosition(sf::Vector2f((float)(startPixelX + 250), (float)startPixelY));
+	// 조각 미리보기는 객체를 만들지 않고 정적 형태 데이터만 읽어 그린다.
+	const auto getSpawnShape = [](PieceType type) -> const low_uint (*)[4][4]
+	{
+		switch (type)
+		{
+			case PieceType::I: return &IPiece::GetStaticShape()[0];
+			case PieceType::J: return &JPiece::GetStaticShape()[0];
+			case PieceType::L: return &LPiece::GetStaticShape()[0];
+			case PieceType::O: return &OPiece::GetStaticShape()[0];
+			case PieceType::S: return &SPiece::GetStaticShape()[0];
+			case PieceType::T: return &TPiece::GetStaticShape()[0];
+			case PieceType::Z: return &ZPiece::GetStaticShape()[0];
+			default: return nullptr;
+		}
+	};
 
-	// 다음 조각 UI 배경 설정
-	sf::RectangleShape nextPieceUIBackground(sf::Vector2f(85, 275));
-	nextPieceUIBackground.setFillColor(sf::Color(50, 50, 50));
-	nextPieceUIBackground.setPosition(sf::Vector2f((float)(startPixelX + 250), (float)(startPixelY + 110)));
+	const float holdX = static_cast<float>(startPixelX + 250);
+	const float holdY = static_cast<float>(startPixelY);
+	const float nextX = holdX;
+	const float nextY = static_cast<float>(startPixelY + 110);
 
-	currentRenderPieces.push_back(std::make_shared<sf::RectangleShape>(holdingPieceUIBackground));
-	currentRenderPieces.push_back(std::make_shared<sf::RectangleShape>(nextPieceUIBackground));
+	CreateBlock(*renderVertices, holdX, holdY, 85, 85, sf::Color(50, 50, 50));
+	CreateBlock(*renderVertices, nextX, nextY, 85, 275, sf::Color(50, 50, 50));
 
 	// 홀드 중인 조각 렌더링
-	if (holdPieceType != PieceType::None)
+	if (const auto holdShape = getSpawnShape(holdPieceType); holdShape != nullptr)
 	{
-		std::shared_ptr<Piece> holdPiece;
-
-		switch (holdPieceType)
-		{
-			case PieceType::I: holdPiece = std::make_shared<IPiece>(*this); break;
-			case PieceType::J: holdPiece = std::make_shared<JPiece>(*this); break;
-			case PieceType::L: holdPiece = std::make_shared<LPiece>(*this); break;
-			case PieceType::O: holdPiece = std::make_shared<OPiece>(*this); break;
-			case PieceType::S: holdPiece = std::make_shared<SPiece>(*this); break;
-			case PieceType::T: holdPiece = std::make_shared<TPiece>(*this); break;
-			case PieceType::Z: holdPiece = std::make_shared<ZPiece>(*this); break;
-			default: holdPiece = nullptr; break;
-		}
-
-		if (holdPiece == nullptr)
-			return;
-
 		sf::Color holdColor = Pieces::colors[static_cast<int>(holdPieceType)];
 
 		if (hasUsedHold)
 			holdColor = sf::Color(holdColor.r / 2, holdColor.g / 2, holdColor.b / 2);
 
-		const auto& holdShape = holdPiece->GetRotateShape()[0];
-
 		int minRow = 4, maxRow = -1;
 
 		for (int row = 0; row < 4; row++)
 		{
 			for (int col = 0; col < 4; col++)
 			{
-				if (holdShape[row][col] == 0)
+				if ((*holdShape)[row][col] == 0)
 					continue;
 
-				if (row < minRow) 
-					minRow = row;
+				minRow = std::min(minRow, row);
+				maxRow = std::max(maxRow, row);
+			}
+		}
 
-				if (row > maxRow)
-					maxRow = row;
+		if (maxRow != -1)
+		{
+			for (int row = minRow; row <= maxRow; row++)
+			{
+				for (int col = 0; col < 4; col++)
+				{
+					if ((*holdShape)[row][col] == 0)
+						continue;
+
+					CreateBlock(*renderVertices, holdX + 10 + col * 17, holdY + 10 + (row - minRow) * 17, 15, 15, holdColor);
+				}
+			}
+		}
+	}
+
+	// 다음 조각 큐 렌더링
+	const std::deque<PieceType>& nextPieces = piecesQueue.GetNextPieces();
+	float currentYOffset = 10.0f;
+
+	for (size_t i = 0; i < nextPieces.size() && i < 5; ++i)
+	{
+		const auto shape = getSpawnShape(nextPieces[i]);
+		if (shape == nullptr)
+			continue;
+
+		int minRow = 4, maxRow = -1;
+		for (int row = 0; row < 4; row++)
+		{
+			for (int col = 0; col < 4; col++)
+			{
+				if ((*shape)[row][col] == 0)
+					continue;
+
+				minRow = std::min(minRow, row);
+				maxRow = std::max(maxRow, row);
 			}
 		}
 
 		if (maxRow == -1)
-			return;
+			continue;
 
-
+		const sf::Color pieceColor = Pieces::colors[static_cast<int>(nextPieces[i])];
 		for (int row = minRow; row <= maxRow; row++)
 		{
 			for (int col = 0; col < 4; col++)
 			{
-				if (holdShape[row][col] == 0)
+				if ((*shape)[row][col] == 0)
 					continue;
 
-				sf::RectangleShape block(sf::Vector2f(15, 15));
-				block.setFillColor(holdColor);
-				block.setPosition(sf::Vector2f(
-					holdingPieceUIBackground.getPosition().x + 10 + col * 17,
-					holdingPieceUIBackground.getPosition().y + 10 + (row - minRow) * 17
-				));
-
-				currentRenderPieces.push_back(std::make_shared<sf::RectangleShape>(block));
+				CreateBlock(*renderVertices,
+					nextX + 10 + col * 17,
+					nextY + currentYOffset + (row - minRow) * 17,
+					15, 15, pieceColor);
 			}
 		}
+
+		currentYOffset += (maxRow - minRow + 2) * 17.0f;
 	}
+}
 
-	// 다음 조각 큐에서 다음 조각들의 종류를 가져옴
-	const std::deque<PieceType>& nextPieces = piecesQueue.GetNextPieces();
+void Tetris::RebuildWallVertices()
+{
+	wallVertices->clear();
 
-	// 다음 조각 UI에 조각들을 렌더링하기 위한 초기 Y 오프셋 설정 (10px)
-	float currentYOffset = 10.0f;
-	
-	// 다음 조각 큐에서 최대 5개의 조각을 렌더링 (UI 공간에 맞게)
-	for (size_t i = 0; i < nextPieces.size() && i < 5; ++i)
-	{
-		PieceType pieceType = nextPieces[i];
-		std::shared_ptr<Piece> piece;
+	constexpr int size = Pieces::blockSize - Pieces::blockPadding;
 
-		// 다음 조각의 종류에 따라 해당 조각 객체를 생성
-		switch (pieceType)
-		{
-			case PieceType::I: piece = std::make_shared<IPiece>(*this); break;
-			case PieceType::J: piece = std::make_shared<JPiece>(*this); break;
-			case PieceType::L: piece = std::make_shared<LPiece>(*this); break;
-			case PieceType::O: piece = std::make_shared<OPiece>(*this); break;
-			case PieceType::S: piece = std::make_shared<SPiece>(*this); break;
-			case PieceType::T: piece = std::make_shared<TPiece>(*this); break;
-			case PieceType::Z: piece = std::make_shared<ZPiece>(*this); break;
-			default: continue;
-		}
+	// 왼쪽 벽
+	for (int i = 0; i <= height; i++)
+		CreateBlock(*wallVertices, (float)startPixelX, (float)(startPixelY + i * Pieces::blockSize), (float)size, (float)size, Pieces::wallColor);
 
-		sf::Color pieceColor = Pieces::colors[static_cast<int>(pieceType)]; // 조각 종류에 따른 색상 가져오기
-		const auto& rotationShape = piece->GetRotateShape()[0];
+	// 오른쪽 벽
+	const int rightWallX = startPixelX + (width + 1) * Pieces::blockSize;
+	for (int i = 0; i <= height; i++)
+		CreateBlock(*wallVertices, (float)rightWallX, (float)(startPixelY + i * Pieces::blockSize), (float)size, (float)size, Pieces::wallColor);
 
-		int minRow = 4, maxRow = -1;
-
-		// 다음 조각의 회전 형태에서 상단과 하단의 빈 행을 제외하기 위해 최소 행과 최대 행을 계산
-		for (int row = 0; row < 4; row++)
-		{
-			for (int col = 0; col < 4; col++)
-			{
-				if (rotationShape[row][col] == 0)
-					continue;
-
-				if (row < minRow) 
-					minRow = row;
-
-				if (row > maxRow)
-					maxRow = row;
-			}
-		}
-
-		// 만약 모든 행이 빈 행이라면 (즉, 조각이 없는 경우) 렌더링을 건너뜀
-		if (maxRow == -1)
-			continue;
-
-		// 다음 조각의 회전 형태에서 유효한 블록들만 렌더링 (빈 행 제외)
-		for (int row = minRow; row <= maxRow; ++row)
-		{
-			for (int col = 0; col < 4; ++col)
-			{
-				if (rotationShape[row][col] == 0)
-					continue;
-
-				// 유효한 블록을 렌더링하기 위한 사각형 객체 생성
-				sf::RectangleShape block(sf::Vector2f(15, 15));
-				block.setFillColor(pieceColor);
-
-				block.setPosition(sf::Vector2f(
-					nextPieceUIBackground.getPosition().x + 10 + col * 17,
-					nextPieceUIBackground.getPosition().y + currentYOffset + (row - minRow) * 17)
-				);
-
-				currentRenderPieces.push_back(std::make_shared<sf::RectangleShape>(block));
-			}
-		}
-
-		// 다음 조각의 회전 형태에서 유효한 블록들의 높이에 따라 Y 오프셋을 증가시켜 다음 조각이 UI에 겹치지 않도록 함
-		int pieceHeight = (maxRow - minRow + 1);
-		currentYOffset += (pieceHeight + 1) * 17.0f;
-	}
+	// 바닥 벽
+	const int bottomWallY = startPixelY + height * Pieces::blockSize;
+	for (int i = 1; i <= width; i++)
+		CreateBlock(*wallVertices, (float)(startPixelX + i * Pieces::blockSize), (float)bottomWallY, (float)size, (float)size, Pieces::wallColor);
 }
 
 bool Tetris::CreatePieceWithType(PieceType type)
@@ -304,15 +310,31 @@ bool Tetris::CreatePieceWithType(PieceType type)
 	return true;
 }
 
-bool Tetris::CreatePiece()
+bool Tetris::CreatePiece(bool isInitialPlace)
 {
 	hasUsedHold = false;
 
 	// 다음 조각 큐에서 다음 조각의 종류를 가져와 해당 조각을 생성
 	if (!CreatePieceWithType(piecesQueue.GetPiece()))
 		return false;
+	
+	// 현재 조각이 생성된 시점에만 가능한 배치 목록을 갱신
+	if (isInitialPlace && hasInitialPlace)
+	{
+		possiblePlacements = initialPlace;
+		PiecePlacementSender::Send(*this, possiblePlacements);
+	}
 
-	UpdatePossiblePlacements();
+	else
+	{
+		UpdatePossiblePlacements();
+
+		if (isInitialPlace)
+		{
+			initialPlace = possiblePlacements;
+			hasInitialPlace = true;
+		}
+	}
 
 	return true;
 }
@@ -409,14 +431,9 @@ void Tetris::RemoveLine()
 	UpdateScoreText();
 }
 
-void Tetris::AddRenderPiece(const std::shared_ptr<const sf::Drawable>& piece)
+void Tetris::AddRenderRect(float x, float y, float rectWidth, float rectHeight, const sf::Color& color)
 {
-	currentRenderPieces.push_back(piece);
-}
-
-void Tetris::AddRenderPieces(const std::vector<std::shared_ptr<const sf::Drawable>>& pieces)
-{
-	currentRenderPieces.insert(currentRenderPieces.end(), pieces.begin(), pieces.end());
+	CreateBlock(*renderVertices, x, y, rectWidth, rectHeight, color);
 }
 
 std::shared_ptr<Piece> Tetris::GetCurrentPiece() const

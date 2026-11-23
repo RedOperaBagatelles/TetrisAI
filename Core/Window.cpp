@@ -27,6 +27,23 @@ void Window::Update(float deltaTime)
         game->Update(deltaTime);
 }
 
+// 폰트는 프로그램 전체에서 하나만 로드해 모든 Tetris가 공유
+// 보드마다 openFromFile()을 호출하면 1000개에서 수백 MB~GB가 중복 할당되어 실패한다.
+const sf::Font& Window::GetFont()
+{
+    static const sf::Font font = []
+    {
+        sf::Font loadedFont;
+
+        if (!loadedFont.openFromFile("C:/Windows/Fonts/CascadiaCode.ttf"))
+            throw std::runtime_error("Failed to load font");
+
+        return loadedFont;
+    }();
+
+    return font;
+}
+
 LRESULT CALLBACK Window::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     if (!instance)
@@ -70,7 +87,7 @@ bool Window::Render()
 
     window.clear();
 
-    for (const auto& renderTarget : renderTargets)
+    for (const auto* renderTarget : renderTargets)
         window.draw(*renderTarget);
 
     window.display();
@@ -81,15 +98,9 @@ bool Window::Render()
     return true;
 }
 
-void Window::AddRenderTarget(const std::shared_ptr<const sf::Drawable>& drawable)
+void Window::AddRenderTarget(const sf::Drawable& drawable)
 {
-    renderTargets.push_back(drawable);
-}
-
-void Window::AddRenderTargets(const std::vector<std::shared_ptr<const sf::Drawable>>& drawables)
-{
-    for (const auto& drawable : drawables)
-		renderTargets.push_back(drawable);
+    renderTargets.push_back(&drawable);
 }
 
 std::vector<std::reference_wrapper<Tetris>> Window::CreateTetris(int count)
@@ -151,6 +162,7 @@ void Window::FitGamesToWindow()
     if (games.empty())
     {
         window.setView(window.getDefaultView());
+        renderTargets.reserve(8);
         return;
     }
 
@@ -182,6 +194,16 @@ void Window::FitGamesToWindow()
     view.setCenter({ (left + right) / 2.0f, (top + bottom) / 2.0f });
     view.setSize({ static_cast<float>(width) / scale, static_cast<float>(height) / scale });
     window.setView(view);
+
+    // 보드가 화면에서 이보다 작아지면 읽을 수 없는 HUD/텍스트를 아예 만들지 않는다.
+    constexpr float minDetailPixelHeight = 180.0f;
+    const bool showDetails = gameAreaPixelHeight * scale >= minDetailPixelHeight;
+
+    for (const auto& game : games)
+        game->SetDetailsVisible(showDetails);
+
+    // 매 프레임 clear()되지만 용량은 유지되므로 미리 확보해 재할당을 막는다.
+    renderTargets.reserve(games.size() * 3 + 8);
 }
 
 void Window::KeyBoardInput(float deltaTime)

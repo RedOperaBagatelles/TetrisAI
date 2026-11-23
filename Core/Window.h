@@ -7,6 +7,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <functional>
 #include <vector>
 #include <memory>
 
@@ -20,9 +21,8 @@ public:
 
 	void KeyBoardInput(float deltaTime);
 
-	// RenderTarget에 그릴 sf::Drawable 객체를 추가하는 메소드
-	void AddRenderTarget(const std::shared_ptr<const sf::Drawable>& drawable);
-	void AddRenderTargets(const std::vector<std::shared_ptr<const sf::Drawable>>& drawables);
+	// RenderTarget에 그릴 sf::Drawable 객체를 추가하는 메소드 (소유권 없이 포인터만 보관)
+	void AddRenderTarget(const sf::Drawable& drawable);
 
 	// 생성할 테트리스 개수를 인자로 받아 창 공간을 최대한 활용하도록 배치하는 메소드
 	std::vector<std::reference_wrapper<Tetris>> CreateTetris(int count);
@@ -32,12 +32,14 @@ public:
 	Tetris& GetTetris(std::size_t index) { return *games.at(index); }
 	std::size_t GetGameCount() const { return games.size(); }
 
+	static const sf::Font& GetFont();	// 글꼴 객체를 반환하는 정적 메소드 (한 번만 로드)	
+
 private:
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	void FitGamesToWindow();											// 생성된 모든 게임 보드가 창 안에 들어오도록 카메라(View)를 조정하는 메소드
 
 	sf::RenderWindow window{ sf::VideoMode({width, height}), "Tetris" };
-	std::vector<std::shared_ptr<const sf::Drawable>> renderTargets;		// 해당 프레임에 그릴 객체들을 저장하는 벡터
+	std::vector<const sf::Drawable*> renderTargets;						// 해당 프레임에 그릴 객체들의 포인터 (객체 수명은 Tetris가 관리)
 	std::vector<std::unique_ptr<Tetris>> games;							// 창에서 관리하는 테트리스 게임들
 	Keyboard keyboard;													// 키보드 입력 시스템 객체
 

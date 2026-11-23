@@ -30,17 +30,18 @@ public:
 	void UpdateScoreText();
 	void UpdatePieceUI();
 	void Ready(int x, int y);
-	bool CreatePiece();
+	bool CreatePiece(bool isInitialPlacement = false);		// isInitialPlacement : 모든 보드가 동일한 시작 상태일 때 첫 보드의 BFS 결과를 재사용
 	void HoldPiece();
 	void RemoveLine();
 	void RecordPiecePlaced() { boardState.RecordPiecePlaced(); }
-	void AddRenderPiece(const std::shared_ptr<const sf::Drawable>& piece);					// 렌더링할 조각을 추가하는 메소드
-	void AddRenderPieces(const std::vector<std::shared_ptr<const sf::Drawable>>& pieces);	// 렌더링할 조각들을 추가하는 메소드
+
+	void AddRenderRect(float x, float y, float width, float height, const sf::Color& color);	// 고스트 블록 등을 정점 버퍼에 직접 추가하는 메소드 (매 프레임 객체 생성 없음)
+	void SetDetailsVisible(bool visible) { showDetails = visible; }								// 보드가 화면에서 충분히 크지 않으면 HUD/점수 텍스트를 생략하는데 사용
 
 	map_size(*GetBoard())[width] { return boardState.GetBoard(); }		// 게임 보드의 2차원 배열을 반환하는 메소드
 	const BoardState& GetBoardState() const { return boardState; }
-	int GetStartX() const { return startPixelX; }		// 게임 보드의 시작 X 좌표(픽셀)를 반환하는 메소드
-	int GetStartY() const { return startPixelY; }		// 게임 보드의 시작 Y 좌표(픽셀)를 반환하는 메소드
+	int GetStartX() const { return startPixelX; }			// 게임 보드의 시작 X 좌표(픽셀)를 반환하는 메소드
+	int GetStartY() const { return startPixelY; }			// 게임 보드의 시작 Y 좌표(픽셀)를 반환하는 메소드
 
 	std::shared_ptr<Piece> GetCurrentPiece() const;
 	PieceType GetHoldPieceType() const;						// 현재 홀드 중인 조각의 종류를 반환하는 메소드
@@ -53,8 +54,21 @@ public:
 	void SendStateAndPlacements();
 
 private:
-	std::vector<std::shared_ptr<const sf::Drawable>> currentRenderPieces;
-	sf::Font font;
+	bool CreatePieceWithType(PieceType type);
+	void UpdatePossiblePlacements();				// 현재 생성된 조각의 상태를 보고 둘 수 있는 모든 경우의 수를 갱신하는 메소드
+	void RebuildWallVertices();						// 벽은 위치가 고정되어 있으므로 한 번만 정점 버퍼를 만든다
+
+	static void CreateBlock(sf::VertexArray& vertices, float x, float y, float width, float height, const sf::Color& color);		// 픽셀 좌표를 기준으로 사각형을 정점 버퍼에 추가
+	static void CreateBlock(sf::VertexArray& vertices, int boardX, int boardY, const sf::Color& color, int offsetX, int offsetY);	// 보드 좌표를 기준으로 사각형을 정점 버퍼에 추가
+
+	static std::vector<PiecePlacement> initialPlace;
+	static bool hasInitialPlace;
+
+	// 재사용하는 정점 버퍼 (매 프레임 clear() 후 다시 채움, 할당 없음)
+	std::shared_ptr<sf::VertexArray> wallVertices;
+	std::shared_ptr<sf::VertexArray> renderVertices;
+	bool showDetails = true;						// 보드가 작으면 HUD/텍스트를 그리지 않음
+
 	std::shared_ptr<sf::Text> scoreText;
 	std::shared_ptr<class Piece> currentPiece;		// 현재 조각 객체
 
@@ -69,9 +83,4 @@ private:
 	bool hasUsedHold = false;						// 해당 턴에 홀드를 사용했는지 여부 (홀드는 한 턴에 한 번만 사용할 수 있음)
 
 	std::vector<PiecePlacement> possiblePlacements;	// 현재 조각으로 둘 수 있는 모든 경우의 수
-
-	bool CreatePieceWithType(PieceType type);
-
-	// 현재 생성된 조각의 상태를 보고 둘 수 있는 모든 경우의 수를 갱신하는 메소드
-	void UpdatePossiblePlacements();
 };

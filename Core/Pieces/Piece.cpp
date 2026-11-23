@@ -303,23 +303,27 @@ void Piece::ShowGhost()
 	while (!IsCollision(rotateShape[currentRotation], ghostPos.x, ghostPos.y + 1, true))
 		ghostPos.y++;	// 고스트 조각이 더 이상 아래로 이동할 수 없을 때까지 아래로 이동
 
-	// 현재 조각 위치 기준으로 고스트 조각의 위치에 고스트 블록을 그려줌
-	std::vector<std::shared_ptr<const sf::Drawable>> ghostBlocks;
+	// 고스트 블록을 사각형 객체 생성 없이 정점 버퍼에 직접 추가
+	constexpr int blockSize = Pieces::blockSize - Pieces::blockPadding;
+	const sf::Color& ghostColor = Pieces::colors[static_cast<int>(PieceType::Ghost)];
+	const int offsetX = tetris.GetStartX();
+	const int offsetY = tetris.GetStartY();
+
 	for (int i = 0; i < 4; i++)
 	{
-		map_size newY = ghostPos.y + i - 4;
+		const map_size newY = ghostPos.y + i - 4;
 
 		for (int j = 0; j < 4; j++)
 		{
-			map_size newX = ghostPos.x + j;
+			const map_size newX = ghostPos.x + j;
 
 			if (rotateShape[currentRotation][i][j] != 0)
 			{
-				auto ghostBlock = Pieces::GetRenderOnePices(newX, newY, PieceType::Ghost, tetris.GetStartX(), tetris.GetStartY());
-				ghostBlocks.push_back(ghostBlock);
+				tetris.AddRenderRect(
+					static_cast<float>(offsetX + (newX + 1) * Pieces::blockSize),
+					static_cast<float>(offsetY + (newY + 1) * Pieces::blockSize),
+					static_cast<float>(blockSize), static_cast<float>(blockSize), ghostColor);
 			}
 		}
 	}
-
-	tetris.AddRenderPieces(ghostBlocks);	// 고스트 블록들을 Tetris 객체에 추가하여 렌더링되도록 함
 }
