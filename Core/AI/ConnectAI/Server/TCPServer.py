@@ -105,7 +105,7 @@ class TCPServer:
 
     # 배치 메시지는 가변 길이이므로 헤더 → 배치 개수 → 각 배치(액션 개수 → 액션들) 순으로 단계적으로 수신하는 메소드
     def ReceivePossiblePlacements(self, header):
-        # 헤더의 나머지 부분 : 현재 조각(x, y, rotation) + 홀드 조각(1) + 배치 개수(2)
+        # 헤더의 나머지 부분 : 현재 조각(x, y, rotation) + 현재 조각 종류(1) + 홀드 조각(1) + 배치 개수(2)
         body = self.ReceiveDataFromClient(PossiblePlacements.HEADER_SIZE - 1)
 
         # 빈 데이터는 연결 종료를 의미

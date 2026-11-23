@@ -10,8 +10,8 @@
 
 std::vector<uint8_t> PiecePlacementSender::pendingMessage;
 
-// 전송되는 바이트 ex (총 22바이트) :
-// 02 03 00 00 06 02 00		헤더  : type = 0x02, x = 3, y = 0, rotation = 0, hold = T(6), 배치개수 = 2 (u16)
+// 전송되는 바이트 ex (총 23바이트) :
+// 02 03 00 00 01 06 02 00	헤더  : type = 0x02, x = 3, y = 0, rotation = 0, current = I(1), hold = T(6), 배치개수 = 2 (u16)
 // 04 12 00 02 00 02 06		배치1 : x = 4, y = 18(0x12), rot = 0, 액션개수 = 2, [MoveRight, HardDrop]
 // 05 13 01 03 00 02 04 06	배치2 : x = 5, y = 19(0x13), rot = 1, 액션개수 = 3, [MoveRight, RotateCW, HardDrop]
 void PiecePlacementSender::Send(const Tetris& tetris, const std::vector<PiecePlacement>& placements)
@@ -37,11 +37,12 @@ void PiecePlacementSender::Send(const Tetris& tetris, const std::vector<PiecePla
 
 	const Position position = currentPiece->GetPosition();
 
-	// 메시지 타입, 현재 조각의 위치와 회전 상태, 홀드 조각의 종류, 배치 개수 추가
+	// 메시지 타입, 현재 조각의 위치와 회전 상태, 현재 조각과 홀드 조각의 종류, 배치 개수 추가
 	bytes.push_back(messageType);
 	bytes.push_back(static_cast<uint8_t>(static_cast<int>(position.x)));
 	bytes.push_back(static_cast<uint8_t>(static_cast<int>(position.y)));
 	bytes.push_back(static_cast<uint8_t>(currentPiece->GetRotation()));
+	bytes.push_back(static_cast<uint8_t>(currentPiece->GetPieceType()));
 	bytes.push_back(static_cast<uint8_t>(tetris.GetHoldPieceType()));
 
 	// 배치 개수 (리틀엔디안 2바이트)
