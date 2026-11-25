@@ -115,6 +115,14 @@ class GameVisualizer:
 
         MakeLabel("Next Pieces : ", y)
         self.val_next = MakeValue(y)
+        y += 20
+
+        MakeLabel("Game ID : ", y)
+        self.val_gameID = MakeValue(y)
+        y += 20
+
+        MakeLabel("Session ID : ", y)
+        self.val_sessionID = MakeValue(y)
         y += 30
 
         MakeLabel("Selected : ", y)
@@ -143,7 +151,7 @@ class GameVisualizer:
         except ValueError:
             return "#555555"
 
-    def UpdateData(self, state, rawBytes):
+    def UpdateData(self, state, rawBytes, sessionID=None):
         for y in range(self.boardHeight):
             for x in range(self.boardWidth):
                 cellValue = state.board[y][x]
@@ -171,6 +179,11 @@ class GameVisualizer:
         next_names = " ".join(self.PieceName(p) for p in state.nextPieces)
         self.canvas.itemconfig(self.val_next, text=next_names)
 
+        self.canvas.itemconfig(self.val_gameID, text=str(state.gameID))
+
+        if sessionID is not None:
+            self.canvas.itemconfig(self.val_sessionID, text=str(sessionID))
+
         hex_lines = []
         for i in range(0, len(rawBytes), 16):
             chunk = rawBytes[i:i + 16]
@@ -183,11 +196,12 @@ class GameVisualizer:
             else:
                 self.canvas.itemconfig(t, text="")
 
-    def UpdateSelection(self, placement, index):
+    def UpdateSelection(self, placement, index, gameID=None):
         actions = ", ".join(action.name for action in placement.actions)
+        gameText = "" if gameID is None else f"Game {gameID} "
         self.canvas.itemconfig(
             self.val_selection,
-            text=f"#{index} ({placement.x}, {placement.y}) rot={placement.rotation} [{actions}]",
+            text=f"{gameText}#{index} ({placement.x}, {placement.y}) rot={placement.rotation} [{actions}]",
         )
 
     def UpdateGameCount(self, gameCount):
@@ -199,10 +213,10 @@ class GameVisualizer:
                 message = self.dataQueue.get_nowait()
 
                 if message.get("kind") == "state":
-                    self.UpdateData(message["state"], message["rawBytes"])
+                    self.UpdateData(message["state"], message["rawBytes"], message.get("sessionID"))
 
                 elif message.get("kind") == "selection":
-                    self.UpdateSelection(message["placement"], message.get("index"))
+                    self.UpdateSelection(message["placement"], message.get("index"), message.get("gameID"))
 
                 elif message.get("kind") == "game_count":
                     self.UpdateGameCount(message["count"])

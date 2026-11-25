@@ -79,6 +79,10 @@ std::vector<uint8_t> AIOutput::ToByte() const
 
 	bytes.push_back(messageType);
 
+	// 대상 게임을 구분하는 gameID (리틀엔디안)
+	for (size_t i = 0; i < gameIDSize; i++)
+		bytes.push_back(static_cast<uint8_t>((tetris.GetGameID() >> (i * 8)) & 0xFF));
+
 	for (map_size y = 0; y < Tetris::maxHeight; y++)
 	{
 		for (map_size x = 0; x < Tetris::width; x++)

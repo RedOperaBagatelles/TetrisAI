@@ -2,7 +2,7 @@
 from enum import IntEnum
 from typing import List
 
-from GameState import PieceType
+from GameState import GameState, PieceType
 
 
 # AI가 수행할 수 있는 행동을 나타내는 열거형 (Core/AI/AIInput.h 의 enum class AIAction 과 값이 반드시 일치해야 함)
@@ -31,12 +31,13 @@ class Placement:
 class PossiblePlacements:
     MESSAGE_TYPE = 0x02  # PiecePlacementSender::messageType (possible_placements 메시지 식별 바이트)
 
-    # 헤더(1) + 현재 조각(x, y, rotation = 3, type = 1) + 홀드 조각(1) + 배치 개수(2)
-    HEADER_SIZE = 1 + 3 + 1 + 1 + 2
+    # 헤더(1) + gameID(GameState.GAME_ID_SIZE) + 현재 조각(x, y, rotation = 3, type = 1) + 홀드 조각(1) + 배치 개수(2)
+    HEADER_SIZE = 1 + GameState.GAME_ID_SIZE + 3 + 1 + 1 + 2
 
     # 배치(위치 x, y, rotation = 3) + 액션 개수(2)
     PLACEMENT_SIZE = 3 + 2
 
+    gameID       : int                 # 대상 게임 ID (세션 내에서 1부터 시작)
     x            : int                 # 현재 조각의 X 위치
     y            : int                 # 현재 조각의 Y 위치
     rotation     : int                 # 현재 조각의 회전 상태
@@ -54,6 +55,10 @@ class PossiblePlacements:
             raise ValueError(f"잘못된 메시지 유형 : {data[0]:#x} (expected {thisClass.MESSAGE_TYPE:#x})")
 
         offset = 1
+
+        # 대상 게임 ID 파싱 (리틀엔디안 u16, 1~65535)
+        gameID = int.from_bytes(data[offset:offset + GameState.GAME_ID_SIZE], 'little')
+        offset += GameState.GAME_ID_SIZE
 
         # 현재 조각의 위치와 회전 상태, 현재 조각과 홀드 조각의 종류 파싱 (x, y는 부호 있는 8비트 정수)
         x = int.from_bytes(data[offset:offset + 1], 'little', signed=True)
@@ -93,4 +98,4 @@ class PossiblePlacements:
         if offset != len(data):
             raise ValueError(f"잘못된 배치 메시지 크기 : {len(data)} (expected {offset})")
 
-        return thisClass(x=x, y=y, rotation=rotation, currentPiece=currentPiece, holdPiece=holdPiece, placements=placements)
+        return thisClass(gameID=gameID, x=x, y=y, rotation=rotation, currentPiece=currentPiece, holdPiece=holdPiece, placements=placements)

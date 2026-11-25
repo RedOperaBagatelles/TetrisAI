@@ -8,7 +8,7 @@
 
 #include <utility>
 
-std::vector<uint8_t> GameStateSender::pendingMessage;
+std::map<GameCapacity, std::vector<uint8_t>> GameStateSender::pendingMessages;
 
 void GameStateSender::Send(Tetris& tetris)
 {
@@ -21,10 +21,10 @@ void GameStateSender::Send(Tetris& tetris)
 	AIOutput aiOutput(tetris);
 	std::vector<uint8_t> bytes = aiOutput.ToByte();
 
-	// 서버 연결 전이면 마지막 메시지를 보관해 두었다가 연결 성공 후 Flush()에서 전송
+	// 서버 연결 전이면 게임별 마지막 메시지를 보관해 두었다가 연결 성공 후 Flush()에서 전송
 	if (!client.IsConnected())
 	{
-		pendingMessage = std::move(bytes);
+		pendingMessages[tetris.GetGameID()] = std::move(bytes);
 		return;
 	}
 
@@ -33,7 +33,7 @@ void GameStateSender::Send(Tetris& tetris)
 
 void GameStateSender::Flush()
 {
-	if (pendingMessage.empty())
+	if (pendingMessages.empty())
 		return;
 
 	TCPClient& client = TCPClient::GetInstance();
@@ -41,6 +41,8 @@ void GameStateSender::Flush()
 	if (!client.IsConnected())
 		return;
 
-	client.SendMessage(pendingMessage);
-	pendingMessage.clear();
+	for (const auto& [gameID, message] : pendingMessages)
+		client.SendMessage(message);
+
+	pendingMessages.clear();
 }

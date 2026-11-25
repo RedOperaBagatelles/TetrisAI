@@ -8,12 +8,12 @@
 
 #include <memory>
 
-std::vector<uint8_t> PiecePlacementSender::pendingMessage;
+std::map<GameCapacity, std::vector<uint8_t>> PiecePlacementSender::pendingMessages;
 
-// 전송되는 바이트 ex (총 23바이트) :
-// 02 03 00 00 01 06 02 00	헤더  : type = 0x02, x = 3, y = 0, rotation = 0, current = I(1), hold = T(6), 배치개수 = 2 (u16)
-// 04 12 00 02 00 02 06		배치1 : x = 4, y = 18(0x12), rot = 0, 액션개수 = 2, [MoveRight, HardDrop]
-// 05 13 01 03 00 02 04 06	배치2 : x = 5, y = 19(0x13), rot = 1, 액션개수 = 3, [MoveRight, RotateCW, HardDrop]
+// 전송되는 바이트 ex (gameID = 1, 총 25바이트) :
+// 02 01 00 03 00 00 01 06 02 00	헤더 : type = 0x02, gameID = 1(u16), x = 3, y = 0, rotation = 0, current = I(1), hold = T(6), 배치개수 = 2(u16)
+// 04 12 00 02 00 02 06					배치1 : x = 4, y = 18(0x12), rot = 0, 액션개수 = 2, [MoveRight, HardDrop]
+// 05 13 01 03 00 02 04 06				배치2 : x = 5, y = 19(0x13), rot = 1, 액션개수 = 3, [MoveRight, RotateCW, HardDrop]
 void PiecePlacementSender::Send(const Tetris& tetris, const std::vector<PiecePlacement>& placements)
 {
 	TCPClient& client = TCPClient::GetInstance();
@@ -24,10 +24,10 @@ void PiecePlacementSender::Send(const Tetris& tetris, const std::vector<PiecePla
 
 	std::shared_ptr<Piece> currentPiece = tetris.GetCurrentPiece();
 
-	// 조각이 없는 상태라면 보관 중인 메시지도 유효하지 않으므로 제거
+	// 조각이 없는 상태라면 해당 게임의 보관 메시지도 유효하지 않으므로 제거
 	if (currentPiece == nullptr)
 	{
-		pendingMessage.clear();
+		pendingMessages.erase(tetris.GetGameID());
 		return;
 	}
 
@@ -37,8 +37,13 @@ void PiecePlacementSender::Send(const Tetris& tetris, const std::vector<PiecePla
 
 	const Position position = currentPiece->GetPosition();
 
-	// 메시지 타입, 현재 조각의 위치와 회전 상태, 현재 조각과 홀드 조각의 종류, 배치 개수 추가
+	// 메시지 타입, gameID, 현재 조각의 위치와 회전 상태, 현재 조각과 홀드 조각의 종류, 배치 개수 추가
 	bytes.push_back(messageType);
+
+	// 대상 게임을 구분하는 gameID (리틀엔디안)
+	for (size_t i = 0; i < gameIDSize; i++)
+		bytes.push_back(static_cast<uint8_t>((tetris.GetGameID() >> (i * 8)) & 0xFF));
+
 	bytes.push_back(static_cast<uint8_t>(static_cast<int>(position.x)));
 	bytes.push_back(static_cast<uint8_t>(static_cast<int>(position.y)));
 	bytes.push_back(static_cast<uint8_t>(currentPiece->GetRotation()));
@@ -65,10 +70,10 @@ void PiecePlacementSender::Send(const Tetris& tetris, const std::vector<PiecePla
 			bytes.push_back(static_cast<uint8_t>(action));
 	}
 
-	// 서버 연결 전이면 마지막 메시지를 보관해 두었다가 연결 성공 후 Flush()에서 전송
+	// 서버 연결 전이면 게임별 마지막 메시지를 보관해 두었다가 연결 성공 후 Flush()에서 전송
 	if (!client.IsConnected())
 	{
-		pendingMessage = std::move(bytes);
+		pendingMessages[tetris.GetGameID()] = std::move(bytes);
 		return;
 	}
 
@@ -77,7 +82,7 @@ void PiecePlacementSender::Send(const Tetris& tetris, const std::vector<PiecePla
 
 void PiecePlacementSender::Flush()
 {
-	if (pendingMessage.empty())
+	if (pendingMessages.empty())
 		return;
 
 	TCPClient& client = TCPClient::GetInstance();
@@ -85,6 +90,8 @@ void PiecePlacementSender::Flush()
 	if (!client.IsConnected())
 		return;
 
-	client.SendMessage(pendingMessage);
-	pendingMessage.clear();
+	for (const auto& [gameID, message] : pendingMessages)
+		client.SendMessage(message);
+
+	pendingMessages.clear();
 }

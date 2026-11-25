@@ -5,8 +5,11 @@
 #include "Core/AI/AIOutput.h"
 #include "Core/AI/AIInput.h"
 
+#include <cctype>
 #include <iostream>
+#include <random>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <chrono>
 #include <vector>
@@ -22,13 +25,81 @@ TCPClient& TCPClient::GetInstance()
 	return instance;
 }
 
-void TCPClient::SetTetris(Tetris* tetrisPtr, std::size_t gameCount)
+TCPClient::TCPClient() : sessionID(GenerateSessionID())
 {
-	tetris = tetrisPtr;
-	this->gameCount = gameCount;
+}
 
-	if (tetris && !aiInput)
-		aiInput = std::make_unique<AIInput>(*tetris);
+SessionID TCPClient::GenerateSessionID()
+{
+	// 같은 머신에서 클라이언트를 다시 실행해도 gameID(1부터의 순번)가 겹치지 않도록 세션마다 새 ID를 만든다.
+	std::random_device randomDevice;
+	const SessionID high = static_cast<SessionID>(randomDevice());
+	const SessionID low = static_cast<SessionID>(randomDevice());
+
+	return (high << 32) | low;
+}
+
+bool TCPClient::ExtractNumberField(std::string_view message, std::string_view key, std::uint64_t& value)
+{
+	const std::string searchKey = "\"" + std::string(key) + "\"";
+	const std::size_t keyPos = message.find(searchKey);
+
+	if (keyPos == std::string_view::npos)
+		return false;
+
+	const std::size_t colonPos = message.find(':', keyPos + searchKey.size());
+
+	if (colonPos == std::string_view::npos)
+		return false;
+
+	std::size_t pos = colonPos + 1;
+
+	while (pos < message.size() && std::isspace(static_cast<unsigned char>(message[pos])))
+		pos++;
+
+	const bool isQuoted = pos < message.size() && message[pos] == '"';
+
+	if (isQuoted)
+		pos++;
+
+	const std::size_t tokenStart = pos;
+	std::size_t tokenEnd = pos;
+
+	if (isQuoted)
+	{
+		while (tokenEnd < message.size() && message[tokenEnd] != '"')
+			tokenEnd++;
+	}
+
+	else
+	{
+		while (tokenEnd < message.size() && std::isdigit(static_cast<unsigned char>(message[tokenEnd])))
+			tokenEnd++;
+	}
+
+	if (tokenEnd == tokenStart)
+		return false;
+
+	try
+	{
+		value = std::stoull(std::string(message.substr(tokenStart, tokenEnd - tokenStart)));
+		return true;
+	}
+
+	catch (...)
+	{
+		return false;
+	}
+}
+
+void TCPClient::SetGames(const std::vector<std::reference_wrapper<Tetris>>& newGames)
+{
+	games.clear();
+	gameCount = newGames.size();
+
+	// 새로운 게임 목록을 등록하고 gameID → Tetris* 매핑을 구성
+	for (Tetris& game : newGames)
+		games.emplace(game.GetGameID(), &game);
 }
 
 void TCPClient::Initialize()
@@ -156,6 +227,8 @@ std::string TCPClient::GetCheckConnectMessage() const
 	root->AddChild(std::make_unique<Json>("MessageSize", std::to_string(AIOutput::messageSize)));
 	root->AddChild(std::make_unique<Json>("PieceTypeCount", std::to_string(static_cast<unsigned int>(PieceType::Count))));
 	root->AddChild(std::make_unique<Json>("GameCount", std::to_string(gameCount)));
+	root->AddChild(std::make_unique<Json>("SessionID", std::to_string(sessionID)));
+	root->AddChild(std::make_unique<Json>("GameIDSize", std::to_string(gameIDSize)));
 
 	return Json::ToString(root.get());
 }
@@ -248,6 +321,17 @@ void TCPClient::ReceiveLoop()
 
 				if (status == "Response")
 				{
+					// 어떤 세션의 어떤 게임에 대한 명령인지 확인
+					std::uint64_t commandSessionID = 0;
+					std::uint64_t targetGameID = 0;
+
+					if (!ExtractNumberField(message, "SessionID", commandSessionID) ||
+						!ExtractNumberField(message, "GameID", targetGameID))
+					{
+						std::cerr << "SelectPathIndex response is missing SessionID/GameID. Ignored.\n";
+						continue;
+					}
+
 					// Actions 배열 추출
 					size_t actionsPos = message.find("\"Actions\"");
 
@@ -287,7 +371,7 @@ void TCPClient::ReceiveLoop()
 							}
 
 							if (!actionNames.empty())
-								ExecuteActions(actionNames);
+								ExecuteActions(static_cast<SessionID>(commandSessionID), static_cast<GameCapacity>(targetGameID), actionNames);
 						}
 					}
 				}
@@ -303,34 +387,43 @@ void TCPClient::ReceiveLoop()
 	}
 }
 
-void TCPClient::ExecuteActions(const std::vector<std::string>& actionNames)
+void TCPClient::ExecuteActions(SessionID commandSessionID, GameCapacity targetGameID, const std::vector<std::string>& actionNames)
 {
-	if (!aiInput)
+	// 이전 세션에서 온 명령은 무시 (재접속 후 서버가 오래된 게임을 조작하지 않도록)
+	if (commandSessionID != sessionID)
 	{
-		if (tetris)
-			aiInput = std::make_unique<AIInput>(*tetris);
-		else
-			return;
+		std::cerr << "Ignoring command from another session. expected=" << sessionID << ", received=" << commandSessionID << "\n";
+		return;
 	}
+
+	const auto it = games.find(targetGameID);
+
+	if (it == games.end())
+	{
+		std::cerr << "Ignoring command for unknown gameID=" << targetGameID << "\n";
+		return;
+	}
+
+	Tetris& target = *it->second;
+	AIInput aiInput(target);
 
 	// 액션 시퀀스를 실행하는 동안에는 조각 생성 시점의 상태 전송을 보류
 	isExecutingActions = true;
 
 	for (const auto& name : actionNames)
 	{
-		if (name == "MOVE_LEFT")					aiInput->Action(AIAction::MoveLeft);
-		else if (name == "MOVE_RIGHT")				aiInput->Action(AIAction::MoveRight);
-		else if (name == "MOVE_DOWN")				aiInput->Action(AIAction::MoveDown);
-		else if (name == "ROTATE_CLOCKWISE")		aiInput->Action(AIAction::RotateClockwise);
-		else if (name == "ROTATE_COUNTERCLOCKWISE")	aiInput->Action(AIAction::RotateCounterClockwise);
-		else if (name == "HARD_DROP")				aiInput->Action(AIAction::HardDrop);
-		else if (name == "HOLDING")					aiInput->Action(AIAction::Holding);
-		else if (name == "NONE")					aiInput->Action(AIAction::None);
+		if (name == "MOVE_LEFT")					aiInput.Action(AIAction::MoveLeft);
+		else if (name == "MOVE_RIGHT")				aiInput.Action(AIAction::MoveRight);
+		else if (name == "MOVE_DOWN")				aiInput.Action(AIAction::MoveDown);
+		else if (name == "ROTATE_CLOCKWISE")		aiInput.Action(AIAction::RotateClockwise);
+		else if (name == "ROTATE_COUNTERCLOCKWISE")	aiInput.Action(AIAction::RotateCounterClockwise);
+		else if (name == "HARD_DROP")				aiInput.Action(AIAction::HardDrop);
+		else if (name == "HOLDING")					aiInput.Action(AIAction::Holding);
+		else if (name == "NONE")					aiInput.Action(AIAction::None);
 	}
 
 	isExecutingActions = false;
 
-	// 배치가 모두 완료된 후 현재 보드 상태와 다음 조각의 가능한 배치를 서버로 전송
-	if (tetris)
-		tetris->SendStateAndPlacements();
+	// 배치가 모두 완료된 후 해당 보드의 상태와 다음 조각의 가능한 배치를 서버로 전송
+	target.SendStateAndPlacements();
 }

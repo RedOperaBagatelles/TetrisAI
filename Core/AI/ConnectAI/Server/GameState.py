@@ -33,10 +33,12 @@ class GameState:
     NEXT_PIECE_QUEUE_SIZE = 5   # PiecesQueue::queueSize
 
     MESSAGE_TYPE = 0x01  # AIOutput::messageType (game_state 메시지 식별 바이트)
+    GAME_ID_SIZE = 2     # Utility/Type.h 의 GameIDSize (uint16, ID 범위 1~65535)
 
-    # 헤더(1) + 보드(BOARD_HEIGHT * BOARD_WIDTH) + 현재 조각(type, rotation, x, y = 4) + 홀드 조각(1) + 다음 조각들(NEXT_PIECE_QUEUE_SIZE)
-    MESSAGE_SIZE = 1 + (BOARD_HEIGHT * BOARD_WIDTH) + 4 + 1 + NEXT_PIECE_QUEUE_SIZE
+    # 헤더(1) + gameID(GAME_ID_SIZE) + 보드(BOARD_HEIGHT * BOARD_WIDTH) + 현재 조각(type, rotation, x, y = 4) + 홀드 조각(1) + 다음 조각들(NEXT_PIECE_QUEUE_SIZE)
+    MESSAGE_SIZE = 1 + GAME_ID_SIZE + (BOARD_HEIGHT * BOARD_WIDTH) + 4 + 1 + NEXT_PIECE_QUEUE_SIZE
 
+    gameID              : int                  # 생성 순서대로 부여된 대상 게임 ID (세션 내에서 1부터 시작)
     board: List[List[int]]      # 보드 정보를 담는 2차원 리스트 (0=빈칸, 1~7=조각 종류)
     currentPiece: PieceState    # 현재 조각의 종류
     holdPiece: PieceType        # 홀드 조각의 종류
@@ -44,12 +46,15 @@ class GameState:
 
     # 첫 클라이언트와 연결 시 C++ 클라이언트로부터 수신한 보드 크기, 큐 크기, 메시지 크기 정보로 GameState 클래스 설정 갱신
     @classmethod
-    def Configure(cls, boardWidth: int, boardHeight: int, nextPieceQueueSize: int, pieceTypeCount: Optional[int] = None, ) -> None:
+    def Configure(cls, boardWidth: int, boardHeight: int, nextPieceQueueSize: int, pieceTypeCount: Optional[int] = None, gameIDSize: Optional[int] = None) -> None:
         cls.BOARD_WIDTH = boardWidth
         cls.BOARD_HEIGHT = boardHeight
         cls.NEXT_PIECE_QUEUE_SIZE = nextPieceQueueSize
 
-        cls.MESSAGE_SIZE = 1 + (boardHeight * boardWidth) + 4 + 1 + nextPieceQueueSize
+        if gameIDSize is not None:
+            cls.GAME_ID_SIZE = int(gameIDSize)
+
+        cls.MESSAGE_SIZE = 1 + cls.GAME_ID_SIZE + (boardHeight * boardWidth) + 4 + 1 + nextPieceQueueSize
 
         # pieceTypeCount가 제공되면 PieceType 열거형의 예상 개수와 비교하여 경고 로그 출력
         if pieceTypeCount is not None:
@@ -69,6 +74,10 @@ class GameState:
             raise ValueError(f"잘못된 메시지 유형 : {data[0]:#x} (expected {thisClass.MESSAGE_TYPE:#x})")
         
         offset = 1
+
+        # 대상 게임 ID 파싱 (리틀엔디안 u16, 1~65535)
+        gameID = int.from_bytes(data[offset:offset + thisClass.GAME_ID_SIZE], 'little')
+        offset += thisClass.GAME_ID_SIZE
 
         board = []
 
@@ -92,4 +101,4 @@ class GameState:
         # 다음 조각들의 종류 정보 파싱
         nextPieces = [PieceType(value) for value in data[offset:offset + thisClass.NEXT_PIECE_QUEUE_SIZE]]
 
-        return thisClass(board=board, currentPiece=currentPiece, holdPiece=holdPiece, nextPieces=nextPieces)
+        return thisClass(gameID=gameID, board=board, currentPiece=currentPiece, holdPiece=holdPiece, nextPieces=nextPieces)

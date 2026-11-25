@@ -1,6 +1,9 @@
 ﻿#pragma once
 
+#include "Utility/Type.h"
+
 #include <cstdint>
+#include <map>
 #include <vector>
 
 // 현재 보드 상태를 서버로 전송하는 클래스
@@ -16,5 +19,6 @@ public:
 	static void Flush();
 
 private:
-	static std::vector<uint8_t> pendingMessage;	// 서버 연결 전에 전송하지 못한 메시지
+	// 서버 연결 전에 전송하지 못한 메시지 (게임마다 마지막 상태를 보관해 모두 Flush)
+	static std::map<GameCapacity, std::vector<uint8_t>> pendingMessages;
 };

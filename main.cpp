@@ -12,9 +12,10 @@ int main()
 	window.Initialize();
 
 	// 생성할 테트리스 개수만 지정하면 한 창 안에 모든 보드가 배치된다.
-	window.CreateTetris(100);
+	// 각 보드는 생성 순서대로 gameID(1부터 시작)를 부여받는다.
+	auto games = window.CreateTetris(100);
 
-    TCPClient::GetInstance().SetTetris(&window.GetTetris(), window.GetGameCount());
+    TCPClient::GetInstance().SetGames(games);
     TCPClient::GetInstance().Initialize();
 
 	// 연결 초기화 후 보관된 메시지가 있으면 전송 (게임 상태 → 가능한 배치 순서 유지)

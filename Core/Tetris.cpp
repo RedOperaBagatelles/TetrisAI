@@ -20,10 +20,11 @@
 #include <algorithm>
 #include <deque>
 #include <memory>
+#include <stdexcept>
 
-// 모든 보드는 Ready() 직후 상태가 동일하므로 첫 보드의 BFS 결과를 재사용한다.
-std::vector<PiecePlacement> Tetris::initialPlace;
+std::vector<PiecePlacement> Tetris::initialPlace;	// 모든 보드는 Ready() 직후 상태가 동일하므로 첫 보드의 BFS 결과를 재사용한다.
 bool Tetris::hasInitialPlace = false;
+std::atomic<GameCapacity> Tetris::nextGameID{ 1 };
 
 void Tetris::CreateBlock(sf::VertexArray& vertices, float x, float y, float width, float height, const sf::Color& color)
 {
@@ -48,7 +49,7 @@ void Tetris::CreateBlock(sf::VertexArray& vertices, int boardX, int boardY, cons
 }
 
 Tetris::Tetris(Window& window, int x, int y)
-	: window(window), startPixelX(x), startPixelY(y)
+	: window(window), startPixelX(x), startPixelY(y), gameID(AllocateGameID())
 {
 	// clear()는 메모리를 해제하지 않으므로 미리 충분한 크기를 확보해 둔다.
 	renderVertices = std::make_shared<sf::VertexArray>(sf::PrimitiveType::Triangles);
@@ -280,6 +281,24 @@ void Tetris::RebuildWallVertices()
 	const int bottomWallY = startPixelY + height * Pieces::blockSize;
 	for (int i = 1; i <= width; i++)
 		CreateBlock(*wallVertices, (float)(startPixelX + i * Pieces::blockSize), (float)bottomWallY, (float)size, (float)size, Pieces::wallColor);
+}
+
+GameCapacity Tetris::AllocateGameID()
+{
+	// nextGameID로부터 
+	GameCapacity current = nextGameID.load();
+
+	while (current != invalidGameID)
+	{
+		// 65535에서 1을 더하면 0(InvalidGameID)이 되므로 그 다음부터는 할당을 막는다.
+		const GameCapacity next = static_cast<GameCapacity>(current + 1);
+
+		// nextGameID를 current에서 next로 바꾸는 데 성공하면 current를 반환하고, 실패하면 current를 다시 읽어온다.
+		if (nextGameID.compare_exchange_weak(current, next))
+			return current;
+	}
+
+	throw std::overflow_error("No more gameID available (uint16 supports IDs 1..65535).");
 }
 
 bool Tetris::CreatePieceWithType(PieceType type)

@@ -13,7 +13,8 @@ class TCPServer:
         self.server = None          # 서버 소켓
         self.connectSocket = None   # 클라이언트와 통신할 소켓
         self.address = None         # 연결된 클라이언트 주소
-        self.lastPlacements = None  # 가장 최근에 수신한 가능한 배치 목록
+        self.sessionID = None       # 연결된 클라이언트의 세션 ID (핸드셰이크에서 수신)
+        self.placementsByGameID = {}    # (sessionID, gameID) → 가장 최근에 수신한 가능한 배치 목록
 
     # 서버 소켓 생성 및 연결 대기 시작 메소드
     def Start(self):
@@ -31,6 +32,10 @@ class TCPServer:
     # 클라이언트 연결 수락 메소드
     def Accept(self):
         self.connectSocket, self.address = self.server.accept()
+
+        # 새 연결에서는 이전 세션의 게임 상태를 모두 버린다.
+        self.sessionID = None
+        self.placementsByGameID.clear()
 
         print(f"[Info] 연결된 클라이언트 주소 : {self.address}")
 
@@ -105,7 +110,7 @@ class TCPServer:
 
     # 배치 메시지는 가변 길이이므로 헤더 → 배치 개수 → 각 배치(액션 개수 → 액션들) 순으로 단계적으로 수신하는 메소드
     def ReceivePossiblePlacements(self, header):
-        # 헤더의 나머지 부분 : 현재 조각(x, y, rotation) + 현재 조각 종류(1) + 홀드 조각(1) + 배치 개수(2)
+        # 헤더의 나머지 부분 : gameID(GameState.GAME_ID_SIZE) + 현재 조각(x, y, rotation) + 현재 조각 종류(1) + 홀드 조각(1) + 배치 개수(2)
         body = self.ReceiveDataFromClient(PossiblePlacements.HEADER_SIZE - 1)
 
         # 빈 데이터는 연결 종료를 의미
@@ -138,11 +143,11 @@ class TCPServer:
             message.extend(actions)
 
         try:
-            self.lastPlacements = PossiblePlacements.FromBytes(bytes(message))
-            
+            placements = PossiblePlacements.FromBytes(bytes(message))
+            self.placementsByGameID[(self.sessionID, placements.gameID)] = placements
+
         except Exception as e:
             print(f"[WARN] Failed to parse placements: {e}")
-            self.lastPlacements = None
 
         return bytes(message)
 
@@ -172,35 +177,85 @@ class TCPServer:
         else:
             self.connectSocket.send(data)
 
-    # 서버에서 선택한 경로 인덱스를 클라이언트에 응답
-    def SelectPathIndex(self, index):
+    # 서버에서 선택한 경로 인덱스를 특정 게임에 응답
+    def SelectPathIndex(self, index, gameID=None, sessionID=None):
+        def SendError(message):
+            response = {
+                "Type": "SelectPathIndex",
+                "Status": "Error",
+                "Message": message,
+            }
+
+            if gameID is not None:
+                response["GameID"] = str(gameID)
+
+            if sessionID is not None:
+                response["SessionID"] = str(sessionID)
+
+            self.Send(json.dumps(response, separators=(',', ':')))
+
         try:
             idx = int(index)
-            
+
         # 인덱스가 정수가 아닌 경우
         except Exception:
-            response = {"Type": "SelectPathIndex", "Status": "Error", "Message": "InvalidIndex"}
-            self.Send(json.dumps(response, separators=(',', ':')))
+            SendError("InvalidIndex")
             return
 
-        # 마지막 배치 목록이 없거나 placements 속성이 없는 경우
-        if self.lastPlacements is None or not hasattr(self.lastPlacements, 'placements'):
-            response = {"Type": "SelectPathIndex", "Status": "Error", "Message": "NoPlacements"}
-            self.Send(json.dumps(response, separators=(',', ':')))
+        # 명령에 세션 ID가 있으면 현재 연결과 일치하는지 확인
+        requestedSession = None
+
+        if sessionID is not None:
+            try:
+                requestedSession = int(sessionID)
+
+            except Exception:
+                SendError("InvalidSessionID")
+                return
+
+            if self.sessionID is not None and requestedSession != self.sessionID:
+                SendError("SessionMismatch")
+                return
+
+        targetSession = self.sessionID if requestedSession is None else requestedSession
+
+        # gameID가 없으면 세션에 게임이 하나만 있을 때만 대상을 자동 결정
+        if gameID is None:
+            candidates = [gid for (sid, gid) in self.placementsByGameID if sid == targetSession]
+
+            if len(candidates) != 1:
+                SendError("GameIDRequired")
+                return
+
+            gameID = candidates[0]
+
+        try:
+            gameID = int(gameID)
+
+        except Exception:
+            SendError("InvalidGameID")
+            return
+
+        placements = self.placementsByGameID.get((targetSession, gameID))
+
+        if placements is None:
+            SendError("NoPlacementsForGame")
             return
 
         # 인덱스가 범위를 벗어난 경우
-        if idx < 0 or idx >= len(self.lastPlacements.placements):
-            response = {"Type": "SelectPathIndex", "Status": "Error", "Message": "IndexOutOfRange"}
-            self.Send(json.dumps(response, separators=(',', ':')))
+        if idx < 0 or idx >= len(placements.placements):
+            SendError("IndexOutOfRange")
             return
 
         # 선택된 배치 가져오기
-        selected = self.lastPlacements.placements[idx]
+        selected = placements.placements[idx]
 
+        # gameID와 sessionID를 함께 보내 클라이언트가 정확한 보드에만 명령을 적용하도록 함
         response = {
             "Type": "SelectPathIndex",
             "Status": "Response",
+            "SessionID": str(targetSession),
+            "GameID": str(gameID),
             "Index": idx,
             "X": selected.x,
             "Y": selected.y,

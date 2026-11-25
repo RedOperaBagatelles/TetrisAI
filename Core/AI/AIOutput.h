@@ -33,8 +33,8 @@ public:
 	AIOutputData GetOutputData() const;		// 현재 게임 상태를 데이터 구조로 반환하는 메소드
 	std::vector<uint8_t> ToByte() const;	// TCP 전송을 위해 현재 게임 상태를 고정 크기 바이너리로 직렬화하는 메소드
 
-	// 직렬화된 메시지의 고정 바이트 크기 : 헤더(1) + 보드(maxHeight * width) + 조각 정보(type, rotation, x, y = 4) + 홀드 조각(1) + 대기 중인 다음 조각들(queueSize)
-	static constexpr size_t messageSize = 1 + (Tetris::maxHeight * Tetris::width) + 4 + 1 + PiecesQueue::queueSize;
+	// 직렬화된 메시지의 고정 바이트 크기 : 헤더(1) + GameCapacity(gameIDSize) + 보드(maxHeight * width) + 조각 정보(type, rotation, x, y = 4) + 홀드 조각(1) + 대기 중인 다음 조각들(queueSize)
+	static constexpr size_t messageSize = 1 + gameIDSize + (Tetris::maxHeight * Tetris::width) + 4 + 1 + PiecesQueue::queueSize;
 
 private:
 	static constexpr uint8_t messageType = 0x01;	// game_state 메시지를 나타내는 식별 바이트
