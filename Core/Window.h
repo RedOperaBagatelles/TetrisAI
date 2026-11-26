@@ -7,6 +7,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <algorithm>
 #include <functional>
 #include <vector>
 #include <memory>
@@ -28,6 +29,14 @@ public:
 	std::vector<std::reference_wrapper<Tetris>> CreateTetris(int count);
 	// 원하는 화면 좌표에 테트리스 한 개를 생성하는 메소드
 	Tetris& CreateTetris(int x, int y);
+
+	void ResetAllGames();			// R 키에서 호출하는 메소드 - 모든 게임을 한 번에 초기 상태로 되돌림
+	bool IsAllGamesOver() const;	// 모든 게임이 Game Over인지 여부 (모두 종료되면 한 시뮬레이션이 끝난 것)
+
+	// 숫자 키(1~9)로 전체 게임 배속을 변경 (0은 1배속으로 복귀)
+	void SetSpeedMultiplier(int multiplier) { speedMultiplier = std::clamp(multiplier, 1, 9); }
+	int GetSpeedMultiplier() const { return speedMultiplier; }
+
 	Tetris& GetTetris() { return *games.front(); }
 	Tetris& GetTetris(std::size_t index) { return *games.at(index); }
 	std::size_t GetGameCount() const { return games.size(); }
@@ -59,4 +68,6 @@ private:
 	constexpr static int horizontalGap = 20;
 	constexpr static int verticalGap = 20;
 	constexpr static int margin = 20;
+
+	int speedMultiplier = 1;			// 숫자 키로 지정한 전체 게임 배속 (1~9)
 };

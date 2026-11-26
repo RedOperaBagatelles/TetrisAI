@@ -271,7 +271,7 @@ void Piece::Place()
 	currentPiece = nullptr;	// 현재 조각이 고정되었으므로 Tetris 객체의 currentPiece를 nullptr로 설정하여 새로운 조각이 생성될 수 있도록 함 
 
 	if (!tetris.CreatePiece())
-		tetris.Initialize(); // 블록 생성을 할 수 없는 경우(게임 오버) 게임 초기화
+		tetris.GameOver(); // 블록 생성을 할 수 없는 경우(게임 오버) 다른 게임이 끝날 때까지 대기
 }
 
 void Piece::RemovePieceFromBoard()

@@ -68,13 +68,36 @@ void Tetris::Initialize()
 	scoreText->setCharacterSize(16);
 	scoreText->setFillColor(sf::Color::White);
 
+	gameOverText = std::make_shared<sf::Text>(Window::GetFont());
+	gameOverText->setString("GAME OVER");
+	gameOverText->setCharacterSize(28);
+	gameOverText->setFillColor(sf::Color(255, 80, 80));
+
 	Ready(startPixelX, startPixelY);
 	UpdateScoreText();
 }
 
+void Tetris::Reset()
+{
+	// 진행 중이던 조각을 버리고 초기 상태에서 다시 시작 (R 키로 모든 게임을 한꺼번에 리셋할 때 사용)
+	currentPiece.reset();
+	possiblePlacements.clear();
+
+	Initialize();
+}
+
+void Tetris::GameOver()
+{
+	if (isGameOver)
+		return;
+
+	isGameOver = true;
+	possiblePlacements.clear();
+}
+
 void Tetris::Update(float deltaTime)
 {
-	if (currentPiece != nullptr)
+	if (!isGameOver && currentPiece != nullptr)
 		currentPiece->Update(deltaTime);
 
 	// 객체를 새로 만들지 않고 재사용하는 정점 버퍼만 비운다.
@@ -92,6 +115,25 @@ void Tetris::Update(float deltaTime)
 
 			CreateBlock(*renderVertices, j, height - i - 2, Pieces::colors[static_cast<int>(board[i][j])], startPixelX, startPixelY);
 		}
+	}
+
+	// Game Over가 된 게임은 더 이상 조각을 움직이지 않고 마지막 보드 위에 반투명 덮개와 문구를 그린다.
+	if (isGameOver)
+	{
+		// 블록들을 먼저 채운 뒤 그 위에 검은색 반투명 사각형을 덧그린다. (정점 버퍼는 추가 순서대로 그려짐)
+		AddRenderRect(static_cast<float>(startPixelX + Pieces::blockSize),
+		              static_cast<float>(startPixelY + Pieces::blockSize),
+		              static_cast<float>(width * Pieces::blockSize - Pieces::blockPadding),
+		              static_cast<float>((height - 1) * Pieces::blockSize - Pieces::blockPadding),
+		              sf::Color(0, 0, 0, 170));
+
+		window.AddRenderTarget(*wallVertices);
+		window.AddRenderTarget(*renderVertices);
+
+		if (gameOverText != nullptr)
+			window.AddRenderTarget(*gameOverText);	// 덮개 위에 GAME OVER 문구
+
+		return;
 	}
 
 	if (currentPiece != nullptr)
@@ -116,6 +158,8 @@ void Tetris::Ready(int x, int y)
 	startPixelX = x;
 	startPixelY = y;
 
+	isGameOver = false;
+	currentPiece.reset();
 	holdPieceType = PieceType::None;
 	hasUsedHold = false;
 	piecesQueue.Reset();
@@ -123,6 +167,14 @@ void Tetris::Ready(int x, int y)
 
 	if (scoreText != nullptr)
 		scoreText->setPosition({ (float)startPixelX + 250, (float)startPixelY + 395 });
+
+	if (gameOverText != nullptr)
+	{
+		const sf::FloatRect textBounds = gameOverText->getLocalBounds();
+		gameOverText->setOrigin({ textBounds.size.x / 2.0f, textBounds.size.y / 2.0f });
+		gameOverText->setPosition({ static_cast<float>(startPixelX + (width / 2 + 1) * Pieces::blockSize),
+		                            static_cast<float>(startPixelY + (height + 1) * Pieces::blockSize / 2) });
+	}
 
 	// 벽은 위치가 바뀔 때만 다시 만든다.
 	RebuildWallVertices();
@@ -372,7 +424,7 @@ void Tetris::HoldPiece()
 	bool success = (toSpawn == PieceType::None) ? CreatePiece() : CreatePieceWithType(toSpawn);
 
 	if (!success)
-		Initialize();
+		GameOver();		// 홀드한 조각도 생성할 수 없으면 게임 오버 상태로 진입
 
 	hasUsedHold = true;
 
@@ -382,7 +434,13 @@ void Tetris::HoldPiece()
 
 void Tetris::UpdatePossiblePlacements()
 {
-	// 조각이 생성되지 않은 상태라면 경우의 수도 없음
+	// 게임이 종료되었거나 조각이 생성되지 않은 상태라면 경우의 수도 없음
+	if (isGameOver)
+	{
+		possiblePlacements.clear();
+		return;
+	}
+
 	if (currentPiece == nullptr)
 	{
 		possiblePlacements.clear();
@@ -398,7 +456,8 @@ void Tetris::UpdatePossiblePlacements()
 
 void Tetris::SendStateAndPlacements()
 {
-	if (currentPiece == nullptr)
+	// Game Over가 된 보드의 상태는 서버에서 더 이상 선택하지 않도록 전송하지 않는다.
+	if (isGameOver || currentPiece == nullptr)
 		return;
 
 	GameStateSender::Send(*this);

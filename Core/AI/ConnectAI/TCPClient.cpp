@@ -405,6 +405,11 @@ void TCPClient::ExecuteActions(SessionID commandSessionID, GameCapacity targetGa
 	}
 
 	Tetris& target = *it->second;
+
+	// 이미 Game Over가 된 게임은 서버가 보낸 액션을 실행하지 않는다.
+	if (target.IsGameOver())
+		return;
+
 	AIInput aiInput(target);
 
 	// 액션 시퀀스를 실행하는 동안에는 조각 생성 시점의 상태 전송을 보류

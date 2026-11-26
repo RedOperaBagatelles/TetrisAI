@@ -20,11 +20,21 @@ void Window::Update(float deltaTime)
 {
     // FPS 측정 및 창 제목 갱신
     float fps = 1.0f / deltaTime;
-    window.setTitle("Tetris - FPS: " + std::to_string(static_cast<int>(fps)));
+    const std::string speedSuffix = " - Speed: " + std::to_string(speedMultiplier) + "x";
 
-    KeyBoardInput(deltaTime);
+    if (IsAllGamesOver())
+        window.setTitle("Tetris - All games over! Press R to restart" + speedSuffix);
+
+    else
+        window.setTitle("Tetris - FPS: " + std::to_string(static_cast<int>(fps)) + speedSuffix);
+
+    // 숫자 키로 지정한 배속을 모든 게임(자동 낙하·소프트 드롭 포함)에 적용
+    const float gameDeltaTime = deltaTime * static_cast<float>(speedMultiplier);
+
+    KeyBoardInput(gameDeltaTime);
+
     for (const auto& game : games)
-        game->Update(deltaTime);
+        game->Update(gameDeltaTime);
 }
 
 // 폰트는 프로그램 전체에서 하나만 로드해 모든 Tetris가 공유
@@ -157,6 +167,21 @@ Tetris& Window::CreateTetris(int x, int y)
     return *games.back();
 }
 
+void Window::ResetAllGames()
+{
+    for (const auto& game : games)
+        game->Reset();
+
+    // 리셋 직전에 큐에 남아 있던 키 입력이 새 게임을 바로 조작하지 않도록 비운다.
+    keyboard.Flush();
+}
+
+bool Window::IsAllGamesOver() const
+{
+	// Game이 있고 모든 Game이 Game Over 상태이면 true 반환
+    return !games.empty() && std::all_of(games.begin(), games.end(), [](const auto& game) { return game->IsGameOver(); });
+}
+
 void Window::FitGamesToWindow()
 {
     if (games.empty())
@@ -214,32 +239,65 @@ void Window::KeyBoardInput(float deltaTime)
 	Tetris& activeGame = *games.front();
 	auto currentPiece = activeGame.GetCurrentPiece();
 
-	if (currentPiece == nullptr)
-		return;
-
 	// 아래쪽 방향키를 누르고 있는지 확인 (소프트 드롭)
-	if (keyboard.IsPressed(VK_DOWN))
+	if (!activeGame.IsGameOver() && currentPiece != nullptr && keyboard.IsPressed(VK_DOWN))
 		currentPiece->SoftDrop(deltaTime);
 
-	// 키를 뗐을 때 타이머 초기화
-	else
+	// 키를 뗐을 때 또는 게임이 종료되었을 때 타이머 초기화
+	else if (currentPiece != nullptr)
 		currentPiece->StopSoftDrop();
 
-	// 나머지 키 입력 처리 (일반 키 이벤트)
+	// 키 입력 처리 (일반 키 이벤트)
 	while (const auto currentKey = keyboard.ReadKey())
 	{
 		if (!currentKey->IsPress())
 			continue;
 
+		const unsigned char keyCode = currentKey->GetCode();
+
+		// 모든 게임이 Game Over가 되었을 때 R 키 한 번으로 전체 리셋
+		if (keyCode == 'R')
+		{
+			if (IsAllGamesOver())
+				ResetAllGames();
+
+			continue;
+		}
+
+		// 숫자 키: 1~9는 전체 게임을 해당 배속으로, 0은 1배속으로 되돌림 (숫자 패드도 지원)
+		int pressKey = -1;
+
+		if (keyCode >= '0' && keyCode <= '9')
+			pressKey = keyCode - '0';
+
+		else if (keyCode >= VK_NUMPAD0 && keyCode <= VK_NUMPAD9)
+			pressKey = keyCode - VK_NUMPAD0;
+
+		if (pressKey >= 0)
+		{
+			SetSpeedMultiplier(pressKey == 0 ? 1 : pressKey);
+			continue;
+		}
+
+		// Game Over가 된 게임은 더 이상 조작할 수 없다.
+		if (activeGame.IsGameOver())
+			continue;
+
+		// 같은 프레임에 R로 리셋되었을 수 있으므로 이벤트마다 현재 조각을 다시 가져온다.
+		auto piece = activeGame.GetCurrentPiece();
+
+		if (piece == nullptr)
+			continue;
+
 		switch (currentKey->GetCode())
 		{
 			case VK_LEFT:
-				currentPiece->Move(MoveDirection::Left);
+				piece->Move(MoveDirection::Left);
 				printf("←\n");
 				break;
 
 			case VK_RIGHT:
-				currentPiece->Move(MoveDirection::Right);
+				piece->Move(MoveDirection::Right);
 				printf("→\n");
 				break;
 
@@ -253,7 +311,7 @@ void Window::KeyBoardInput(float deltaTime)
 				break;
 
 			case VK_SPACE:
-				currentPiece->HardDrop();
+				piece->HardDrop();
 				printf("Space\n");
 				break;
 
@@ -265,13 +323,13 @@ void Window::KeyBoardInput(float deltaTime)
 
             // 반시계 방향 회전
             case 'Z':
-                currentPiece->Rotate(false);
+                piece->Rotate(false);
                 printf("Z\n");
 				break;
 
             // 시계 방향 회전
             case 'X':
-                currentPiece->Rotate(true);	
+                piece->Rotate(true);	
 				printf("X\n");
                 break;
 		}

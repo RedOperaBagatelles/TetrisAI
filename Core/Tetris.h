@@ -21,6 +21,7 @@ public:
 	Tetris(Window& window, int x = 50, int y = 50);
 
 	void Initialize() override;
+	void Reset() override;									// GameLoop::Reset - 게임 오버 상태를 포함해 게임을 처음 상태로 되돌림
 	void Update(float deltaTime) override;
 
 	static constexpr map_size height = BoardState::height;
@@ -39,9 +40,12 @@ public:
 	void AddRenderRect(float x, float y, float width, float height, const sf::Color& color);	// 고스트 블록 등을 정점 버퍼에 직접 추가하는 메소드 (매 프레임 객체 생성 없음)
 	void SetDetailsVisible(bool visible) { showDetails = visible; }								// 보드가 화면에서 충분히 크지 않으면 HUD/점수 텍스트를 생략하는데 사용
 
+	void GameOver();													// 조각을 더 이상 생성할 수 없을 때 호출 (다른 게임이 끝날 때까지 Game Over 화면 유지)
+	bool IsGameOver() const { return isGameOver.load(); }
+
 	map_size(*GetBoard())[width] { return boardState.GetBoard(); }		// 게임 보드의 2차원 배열을 반환하는 메소드
 	const BoardState& GetBoardState() const { return boardState; }
-	GameCapacity GetGameID() const { return gameID; }							// 생성 순서대로 부여된 게임 ID (1~65535)
+	GameCapacity GetGameID() const { return gameID; }					// 생성 순서대로 부여된 게임 ID (1~65535)
 	int GetStartX() const { return startPixelX; }			// 게임 보드의 시작 X 좌표(픽셀)를 반환하는 메소드
 	int GetStartY() const { return startPixelY; }			// 게임 보드의 시작 Y 좌표(픽셀)를 반환하는 메소드
 
@@ -75,6 +79,7 @@ private:
 	std::shared_ptr<sf::VertexArray> renderVertices;
 
 	std::shared_ptr<sf::Text> scoreText;
+	std::shared_ptr<sf::Text> gameOverText;			// 게임 오버 문구 (게임 오버 상태에서만 렌더 타깃에 추가)
 	std::shared_ptr<class Piece> currentPiece;		// 현재 조각 객체
 
 	BoardState boardState;							// 현재 게임 보드 상태를 관리하는 객체
@@ -88,6 +93,7 @@ private:
 	int startPixelY = 0;							// 보드의 화면상 시작 Y 좌표 (픽셀 단위이므로 map_size를 사용하지 않음)
 	bool hasUsedHold = false;						// 해당 턴에 홀드를 사용했는지 여부 (홀드는 한 턴에 한 번만 사용할 수 있음)
 	bool showDetails = true;						// 보드가 작으면 HUD/텍스트를 그리지 않음
+	std::atomic<bool> isGameOver{ false };			// true가 되면 조각 업데이트/입력을 멈추고 Game Over 화면을 유지 (수신 스레드에서도 확인)
 
 	std::vector<PiecePlacement> possiblePlacements;	// 현재 조각으로 둘 수 있는 모든 경우의 수
 };
